@@ -7,6 +7,7 @@
     <div id="control">
       <button @click="playVideo">play</button>
       <button @click="pauseVideo">pause</button>
+      <input type="range" v-model="currentMovieTime" min="0" :max="movieDuration" @change="seekMovie">
     </div>
   </div>
 </template>
@@ -17,7 +18,8 @@ import VueYoutube from 'vue-youtube'
 
 Vue.use(VueYoutube)
 
-const VIDEO_ID = 'tpxVMAu1O0Q'
+// const VIDEO_ID = 'tpxVMAu1O0Q'
+const VIDEO_ID = '4DmWPUhZ8lM'
 
 export default {
   name: 'player',
@@ -31,7 +33,9 @@ export default {
         modestbranding: 1,
         rel: 0,
         showinfo: 0
-      }
+      },
+      movieDuration: 1000,
+      currentMovieTime: '0'
     }
   },
   created: function () {
@@ -50,9 +54,17 @@ export default {
     resize () {
       this.player.setSize(window.innerWidth, window.innerHeight)
     },
+    seekMovie () {
+      this.player.seekTo(parseInt(this.currentMovieTime, 10), true)
+    },
     ready () {
-      this.player.mute()
-      this.player.playVideo()
+      this.player.getDuration().then((value) => {
+        this.movieDuration = value
+        this.player.mute()
+        // this.player.playVideo()
+      }).catch(() => {
+        console.log('error')
+      })
     }
   },
   computed: {
