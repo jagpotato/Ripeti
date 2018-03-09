@@ -1,13 +1,13 @@
 <template>
   <div id="player">
     <div>
-      <youtube id="youtube" :video-id="videoId" :height="height" :width="width" :player-vars="playerVars" ref="youtube" @ready="ready"></youtube>
+      <youtube id="youtube" :video-id="videoId" :height="height" :width="width" :player-vars="playerVars" ref="youtube" @ready="readyAction"></youtube>
       <div id="cover"></div>
     </div>
     <div id="control">
-      <button @click="playVideo" :disabled="isPlayButtonDisabled">play</button>
-      <button @click="pauseVideo" :disabled="isPauseButtonDisabled">pause</button>
-      <input type="range" v-model="currentMovieTime" min="0" :max="movieDuration" @change="seekMovie">
+      <button @click="playButtonAction" :disabled="isPlayButtonDisabled">play</button>
+      <button @click="pauseButtonAction" :disabled="isPauseButtonDisabled">pause</button>
+      <input type="range" v-model="currentMovieTime" min="0" :max="movieDuration">
     </div>
   </div>
 </template>
@@ -15,69 +15,66 @@
 <script>
 import Vue from 'vue'
 import VueYoutube from 'vue-youtube'
+import {mapActions} from 'vuex'
 
 Vue.use(VueYoutube)
 
-const VIDEO_ID = 'tpxVMAu1O0Q'
-// const VIDEO_ID = '4DmWPUhZ8lM'
-
 export default {
   name: 'player',
-  data () {
-    return {
-      height: window.innerHeight,
-      width: window.innerWidth,
-      videoId: VIDEO_ID,
-      playerVars: {
-        controls: 0,
-        modestbranding: 1,
-        rel: 0,
-        showinfo: 0
-      },
-      movieDuration: 1000,
-      currentMovieTime: '0',
-      isPlayButtonDisabled: false,
-      isPauseButtonDisabled: true
-    }
-  },
-  created: function () {
-    window.addEventListener('resize', this.resize, false)
-  },
-  beforeDestroy: function () {
-    window.removeEventListener('resize', this.resize, false)
-  },
-  methods: {
-    playVideo () {
-      this.toggleButton()
-      this.player.playVideo()
-    },
-    pauseVideo () {
-      this.toggleButton()
-      this.player.pauseVideo()
-    },
-    resize () {
-      this.player.setSize(window.innerWidth, window.innerHeight)
-    },
-    seekMovie () {
-      this.player.seekTo(parseInt(this.currentMovieTime, 10), true)
-    },
-    toggleButton () {
-      this.isPlayButtonDisabled = !this.isPlayButtonDisabled
-      this.isPauseButtonDisabled = !this.isPauseButtonDisabled
-    },
-    ready () {
-      this.player.getDuration().then((value) => {
-        this.movieDuration = value
-        this.player.mute()
-        // this.player.playVideo()
-      }).catch(() => {
-        console.log('error')
-      })
-    }
-  },
+  created: mapActions('Player', [
+    'addEventAction'
+  ]),
+  beforeDestroy: mapActions('Player', [
+    'removeEventAction'
+  ]),
+  methods: mapActions('Player', [
+    'readyAction',
+    'playButtonAction',
+    'pauseButtonAction'
+  ]),
   computed: {
-    player () {
-      return this.$refs.youtube.player
+    videoId: {
+      get () {
+        return this.$store.state.videoId
+      }
+    },
+    height: {
+      get () {
+        return this.$store.state.height
+      }
+    },
+    width: {
+      get () {
+        return this.$store.state.width
+      }
+    },
+    playerVars: {
+      get () {
+        return this.$store.state.playerVars
+      }
+    },
+    currentMovieTime: {
+      get () {
+        return this.$store.state.currentMovieTime
+      },
+      set (value) {
+        this.$store.commit('seekMovie', value)
+      }
+    },
+    movieDuration: {
+      get () {
+        return this.$store.state.movieDuration
+      }
+    },
+    isPlayButtonDisabled: {
+      get () {
+        return this.$store.state.isPlayButtonDisabled
+      }
+    },
+    isPauseButtonDisabled: {
+      get () {
+        return this.$store.state.isPauseButtonDisabled
+      }
     }
   }
 }
