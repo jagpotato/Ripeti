@@ -11,6 +11,7 @@ const VIDEO_ID = 'tpxVMAu1O0Q'
 const Player = {
   namespaced: true,
   state: {
+    player: '',
     height: window.innerHeight,
     width: window.innerWidth,
     videoId: VIDEO_ID,
@@ -21,67 +22,70 @@ const Player = {
       showinfo: 0
     },
     movieDuration: 1000,
-    currentMovieTime: '0',
-    isPlayButtonDisabled: false,
+    currentMovieTime: 0,
+    isPlayButtonDisabled: true,
     isPauseButtonDisabled: true
   },
   mutations: {
-    addEvent (state) {
-      console.log('addevent')
-      window.addEventListener('resize', state.resize, false)
-    },
-    removeEvent (state) {
-      window.removeEventListener('resize', state.resize, false)
+    initPlayer (state, value) {
+      state.player = value
     },
     playVideo (state) {
-      state.toggleButton()
       state.player.playVideo()
     },
     pauseVideo (state) {
-      state.toggleButton()
       state.player.pauseVideo()
     },
     resize (state) {
       state.player.setSize(window.innerWidth, window.innerHeight)
     },
-    seekMovie (state) {
-      state.player.seekTo(parseInt(state.currentMovieTime, 10), true)
+    seekMovie (state, value) {
+      state.currentMovieTime = parseInt(value, 10)
+      state.player.seekTo(state.currentMovieTime, true)
+    },
+    initButton (state) {
+      state.isPlayButtonDisabled = false
+      state.isPauseButtonDisabled = true
     },
     toggleButton (state) {
       state.isPlayButtonDisabled = !state.isPlayButtonDisabled
       state.isPauseButtonDisabled = !state.isPauseButtonDisabled
     },
-    ready (state, value) {
+    setDuration (state, value) {
       state.movieDuration = value
       state.player.mute()
       // this.player.playVideo()
     }
   },
   actions: {
-    addEventAction ({commit, state}) {
-      commit('addEvent')
-    },
     removeEventAction ({commit, state}) {
-      commit('removeEvent')
+      window.removeEventListener('resize', function () {
+        commit('resize')
+      }, false)
     },
-    readyAction ({commit, state}) {
+    readyAction ({commit, state}, {value}) {
+      commit('initPlayer', value)
+      window.addEventListener('resize', function () {
+        commit('resize')
+      }, false)
+      commit('initButton')
       state.player.getDuration().then((value) => {
-        commit('ready', value)
+        commit('setDuration', value)
       }).catch(() => {
         console.log('error')
       })
     },
     playButtonAction ({commit, state}) {
+      commit('toggleButton')
       commit('playVideo')
     },
     pauseButtonAction ({commit, state}) {
+      commit('toggleButton')
       commit('pauseVideo')
+    },
+    seekBarAction ({commit, state}, {value}) {
+      commit('seekMovie', value)
     }
-  },
-  getters: {
-    // getPlayer (state) {
-    //   return state.$refs.youtube.player
-    // }
   }
 }
 
