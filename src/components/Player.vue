@@ -5,8 +5,9 @@
       <div id="cover"></div>
     </div>
     <div id="control">
-      <button @click="playVideo">play</button>
-      <button @click="pauseVideo">pause</button>
+      <button @click="playVideo" :disabled="isPlayButtonDisabled">play</button>
+      <button @click="pauseVideo" :disabled="isPauseButtonDisabled">pause</button>
+      <input type="range" v-model="currentMovieTime" min="0" :max="movieDuration" @change="seekMovie">
     </div>
   </div>
 </template>
@@ -18,6 +19,7 @@ import VueYoutube from 'vue-youtube'
 Vue.use(VueYoutube)
 
 const VIDEO_ID = 'tpxVMAu1O0Q'
+// const VIDEO_ID = '4DmWPUhZ8lM'
 
 export default {
   name: 'player',
@@ -31,7 +33,11 @@ export default {
         modestbranding: 1,
         rel: 0,
         showinfo: 0
-      }
+      },
+      movieDuration: 1000,
+      currentMovieTime: '0',
+      isPlayButtonDisabled: false,
+      isPauseButtonDisabled: true
     }
   },
   created: function () {
@@ -42,17 +48,31 @@ export default {
   },
   methods: {
     playVideo () {
+      this.toggleButton()
       this.player.playVideo()
     },
     pauseVideo () {
+      this.toggleButton()
       this.player.pauseVideo()
     },
     resize () {
       this.player.setSize(window.innerWidth, window.innerHeight)
     },
+    seekMovie () {
+      this.player.seekTo(parseInt(this.currentMovieTime, 10), true)
+    },
+    toggleButton () {
+      this.isPlayButtonDisabled = !this.isPlayButtonDisabled
+      this.isPauseButtonDisabled = !this.isPauseButtonDisabled
+    },
     ready () {
-      this.player.mute()
-      this.player.playVideo()
+      this.player.getDuration().then((value) => {
+        this.movieDuration = value
+        this.player.mute()
+        // this.player.playVideo()
+      }).catch(() => {
+        console.log('error')
+      })
     }
   },
   computed: {
