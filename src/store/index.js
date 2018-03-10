@@ -21,8 +21,7 @@ const Player = {
       showinfo: 0
     }
   },
-  mutations: {
-  },
+  mutations: {},
   actions: {
     removeEventAction ({commit, state}) {
       window.removeEventListener('resize', function () {
@@ -31,10 +30,10 @@ const Player = {
     },
     readyAction ({commit, state, rootState}, {value}) {
       commit('initPlayer', value, {root: true})
-
       window.addEventListener('resize', function () {
         commit('resize', null, {root: true})
       }, false)
+      commit('initButton', null, {root: true})
       rootState.player.getDuration().then((value) => {
         commit('setDuration', value, {root: true})
         commit('muteVideo', null, {root: true})
@@ -47,30 +46,15 @@ const Player = {
 
 const Controller = {
   namespaced: true,
-  state: {
-    isPlayButtonDisabled: true,
-    isPauseButtonDisabled: true
-  },
-  mutations: {
-    initButton (state) {
-      state.isPlayButtonDisabled = false
-      state.isPauseButtonDisabled = true
-    },
-    toggleButton (state) {
-      state.isPlayButtonDisabled = !state.isPlayButtonDisabled
-      state.isPauseButtonDisabled = !state.isPauseButtonDisabled
-    }
-  },
+  state: {},
+  mutations: {},
   actions: {
-    initButtonAction ({commit, state}) {
-      commit('initButton')
-    },
     playButtonAction ({commit, state}) {
-      commit('toggleButton')
+      commit('toggleButton', null, {root: true})
       commit('playVideo', null, {root: true})
     },
     pauseButtonAction ({commit, state}) {
-      commit('toggleButton')
+      commit('toggleButton', null, {root: true})
       commit('pauseVideo', null, {root: true})
     },
     seekBarAction ({commit, state}, {value}) {
@@ -84,7 +68,9 @@ export default new Vuex.Store({
   state: {
     player: '',
     currentMovieTime: 0,
-    movieDuration: 1000
+    movieDuration: 1000,
+    isPlayButtonDisabled: true,
+    isPauseButtonDisabled: true
   },
   mutations: {
     initPlayer (state, value) {
@@ -108,6 +94,14 @@ export default new Vuex.Store({
     },
     setDuration (state, value) {
       state.movieDuration = value
+    },
+    initButton (state) {
+      state.isPlayButtonDisabled = false
+      state.isPauseButtonDisabled = true
+    },
+    toggleButton (state) {
+      state.isPlayButtonDisabled = !state.isPlayButtonDisabled
+      state.isPauseButtonDisabled = !state.isPauseButtonDisabled
     }
   },
   modules: {
