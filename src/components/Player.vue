@@ -34,7 +34,7 @@ export default {
   computed: {
     currentMovieTime: {
       get () {
-        return this.$store.state.Player.currentMovieTime
+        return this.$store.state.currentMovieTime
       },
       set (value) {
         this.$store.dispatch('Player/seekBarAction', {

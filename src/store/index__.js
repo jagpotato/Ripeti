@@ -19,90 +19,91 @@ const Player = {
       modestbranding: 1,
       rel: 0,
       showinfo: 0
-    },
-    movieDuration: 1000,
-    isPlayButtonDisabled: true,
-    isPauseButtonDisabled: true
-  },
-  mutations: {
-    initButton (state) {
-      state.isPlayButtonDisabled = false
-      state.isPauseButtonDisabled = true
-    },
-    toggleButton (state) {
-      state.isPlayButtonDisabled = !state.isPlayButtonDisabled
-      state.isPauseButtonDisabled = !state.isPauseButtonDisabled
-    },
-    setDuration (state, value) {
-      state.movieDuration = value
-    }
-  },
-  actions: {
-    removeEventAction ({commit, state}) {
-      window.removeEventListener('resize', function () {
-        commit('resize', null, {root: true})
-      }, false)
-    },
-    readyAction ({commit, state, rootState}, {value}) {
-      commit('initPlayer', value, {root: true})
-      window.addEventListener('resize', function () {
-        commit('resize', null, {root: true})
-      }, false)
-      commit('initButton')
-      rootState.player.getDuration().then((value) => {
-        commit('setDuration', value)
-        commit('muteVideo', null, {root: true})
-      }).catch(() => {
-        console.log('error')
-      })
-    },
-    playButtonAction ({commit, state}) {
-      commit('toggleButton')
-      commit('playVideo', null, {root: true})
-    },
-    pauseButtonAction ({commit, state}) {
-      commit('toggleButton')
-      commit('pauseVideo', null, {root: true})
-    },
-    seekBarAction ({commit, state}, {value}) {
-      commit('seekMovie', value, {root: true})
-    }
-  }
-}
-
-// const Controller = {
-//   state: {},
-//   mutations: {},
-//   actions: {},
-//   getters: {}
-// }
-
-export default new Vuex.Store({
-  state: {
-    player: '',
-    currentMovieTime: 0
+    }    
   },
   mutations: {
     initPlayer (state, value) {
       state.player = value
     },
+    resize (state) {
+      state.player.setSize(window.innerWidth, window.innerHeight)
+    },
+    initButton (state) {
+      state.isPlayButtonDisabled = false
+      state.isPauseButtonDisabled = true
+    },
+    setDuration (state, value) {
+      state.movieDuration = value
+      state.player.mute()
+      // this.player.playVideo()
+    }
+  },
+  actions: {
+    removeEventAction ({commit, state}) {
+      window.removeEventListener('resize', function () {
+        commit('resize')
+      }, false)
+    },
+    readyAction ({commit, state}, {value}) {
+      commit('initPlayer', value)
+      window.addEventListener('resize', function () {
+        commit('resize')
+      }, false)
+      commit('initButton')
+      state.player.getDuration().then((value) => {
+        commit('setDuration', value)
+      }).catch(() => {
+        console.log('error')
+      })
+    }
+  }
+}
+
+const Controller = {
+  namespaced: true,
+  state: {
+    movieDuration: 1000,
+    currentMovieTime: 0,
+    isPlayButtonDisabled: true,
+    isPauseButtonDisabled: true
+  },
+  mutations: {
     playVideo (state) {
       state.player.playVideo()
     },
     pauseVideo (state) {
       state.player.pauseVideo()
     },
-    muteVideo (state) {
-      state.player.mute()
-    },
-    resize (state) {
-      state.player.setSize(window.innerWidth, window.innerHeight)
-    },
     seekMovie (state, value) {
       state.currentMovieTime = parseInt(value, 10)
       state.player.seekTo(state.currentMovieTime, true)
+    },
+    toggleButton (state) {
+      state.isPlayButtonDisabled = !state.isPlayButtonDisabled
+      state.isPauseButtonDisabled = !state.isPauseButtonDisabled
     }
   },
+  actions: {
+    playButtonAction ({commit, state}) {
+      commit('toggleButton')
+      commit('playVideo')
+    },
+    pauseButtonAction ({commit, state}) {
+      commit('toggleButton')
+      commit('pauseVideo')
+    },
+    seekBarAction ({commit, state}, {value}) {
+      commit('seekMovie', value)
+    }
+  },
+  getters: {}
+}
+
+export default new Vuex.Store({
+  state: {
+    player: ''
+  },
+  mutations: {},
   modules: {
     Player
     // Controller
