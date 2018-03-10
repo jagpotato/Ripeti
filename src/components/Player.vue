@@ -25,8 +25,9 @@ export default {
       this.$store.dispatch('Player/readyAction', {
         value: this.$refs.youtube.player
       })
+      this.$store.dispatch('Controller/initButtonAction')
     },
-    ...mapActions('Player', [
+    ...mapActions('Controller', [
       'playButtonAction',
       'pauseButtonAction'
     ])
@@ -37,7 +38,7 @@ export default {
         return this.$store.state.currentMovieTime
       },
       set (value) {
-        this.$store.dispatch('Player/seekBarAction', {
+        this.$store.dispatch('Controller/seekBarAction', {
           value: value
         })
       }
@@ -46,10 +47,14 @@ export default {
       'videoId',
       'height',
       'width',
-      'playerVars',
-      'movieDuration',
+      'playerVars'
+    ]),
+    ...mapState('Controller', [
       'isPlayButtonDisabled',
       'isPauseButtonDisabled'
+    ]),
+    ...mapState([
+      'movieDuration'
     ])
   }
 }

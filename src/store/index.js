@@ -19,8 +19,35 @@ const Player = {
       modestbranding: 1,
       rel: 0,
       showinfo: 0
+    }
+  },
+  mutations: {
+  },
+  actions: {
+    removeEventAction ({commit, state}) {
+      window.removeEventListener('resize', function () {
+        commit('resize', null, {root: true})
+      }, false)
     },
-    movieDuration: 1000,
+    readyAction ({commit, state, rootState}, {value}) {
+      commit('initPlayer', value, {root: true})
+
+      window.addEventListener('resize', function () {
+        commit('resize', null, {root: true})
+      }, false)
+      rootState.player.getDuration().then((value) => {
+        commit('setDuration', value, {root: true})
+        commit('muteVideo', null, {root: true})
+      }).catch(() => {
+        console.log('error')
+      })
+    }
+  }
+}
+
+const Controller = {
+  namespaced: true,
+  state: {
     isPlayButtonDisabled: true,
     isPauseButtonDisabled: true
   },
@@ -32,29 +59,11 @@ const Player = {
     toggleButton (state) {
       state.isPlayButtonDisabled = !state.isPlayButtonDisabled
       state.isPauseButtonDisabled = !state.isPauseButtonDisabled
-    },
-    setDuration (state, value) {
-      state.movieDuration = value
     }
   },
   actions: {
-    removeEventAction ({commit, state}) {
-      window.removeEventListener('resize', function () {
-        commit('resize', null, {root: true})
-      }, false)
-    },
-    readyAction ({commit, state, rootState}, {value}) {
-      commit('initPlayer', value, {root: true})
-      window.addEventListener('resize', function () {
-        commit('resize', null, {root: true})
-      }, false)
+    initButtonAction ({commit, state}) {
       commit('initButton')
-      rootState.player.getDuration().then((value) => {
-        commit('setDuration', value)
-        commit('muteVideo', null, {root: true})
-      }).catch(() => {
-        console.log('error')
-      })
     },
     playButtonAction ({commit, state}) {
       commit('toggleButton')
@@ -67,20 +76,15 @@ const Player = {
     seekBarAction ({commit, state}, {value}) {
       commit('seekMovie', value, {root: true})
     }
-  }
+  },
+  getters: {}
 }
-
-// const Controller = {
-//   state: {},
-//   mutations: {},
-//   actions: {},
-//   getters: {}
-// }
 
 export default new Vuex.Store({
   state: {
     player: '',
-    currentMovieTime: 0
+    currentMovieTime: 0,
+    movieDuration: 1000
   },
   mutations: {
     initPlayer (state, value) {
@@ -101,10 +105,13 @@ export default new Vuex.Store({
     seekMovie (state, value) {
       state.currentMovieTime = parseInt(value, 10)
       state.player.seekTo(state.currentMovieTime, true)
+    },
+    setDuration (state, value) {
+      state.movieDuration = value
     }
   },
   modules: {
-    Player
-    // Controller
+    Player,
+    Controller
   }
 })
