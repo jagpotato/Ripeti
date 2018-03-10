@@ -2,20 +2,30 @@
   <div id="controller">
     <button @click="playButtonAction" :disabled="isPlayButtonDisabled">play</button>
     <button @click="pauseButtonAction" :disabled="isPauseButtonDisabled">pause</button>
-    <input id="seekbar" type="range" v-model="currentMovieTime" min="0" :max="movieDuration">
+    <span class="time">{{currentTimeText}}</span>
+    <input id="seekbar" type="range" v-model="currentMovieTime" min="0" :max="movieDuration" :disabled="isSeekbarDisabled">
+    <span class="time">{{durationText}}</span>
   </div>
 </template>
 
 <script>
-import {mapState, mapActions} from 'vuex'
+import {mapState} from 'vuex'
 
 export default {
   name: 'controller',
   methods: {
-    ...mapActions('Controller', [
-      'playButtonAction',
-      'pauseButtonAction'
-    ])
+    playButtonAction () {
+      this.$store.dispatch('Controller/playButtonAction')
+      this.loop()
+    },
+    pauseButtonAction () {
+      this.$store.dispatch('Controller/pauseButtonAction')
+    },
+    loop () {
+      this.$store.dispatch('Controller/timerAction', {
+        loop: this.loop
+      })
+    }
   },
   computed: {
     currentMovieTime: {
@@ -28,8 +38,13 @@ export default {
         })
       }
     },
+    ...mapState('Controller', [
+      'isSeekbarDisabled'
+    ]),
     ...mapState([
+      'currentTimeText',
       'movieDuration',
+      'durationText',
       'isPlayButtonDisabled',
       'isPauseButtonDisabled'
     ])
@@ -44,5 +59,8 @@ export default {
   top: 0px;
   left: 0px;
   z-index: 1;
+}
+.time {
+  color: white;
 }
 </style>
