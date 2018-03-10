@@ -1,7 +1,7 @@
 <template>
   <div id="player">
     <div>
-      <youtube id="youtube" :video-id="videoId" :height="height" :width="width" :player-vars="playerVars" ref="youtube" @ready="ready"></youtube>
+      <youtube id="youtube" :video-id="videoId" :height="height" :width="width" :player-vars="playerVars" ref="youtube" @ready="ready" @ended="end"></youtube>
       <div id="cover"></div>
     </div>
     <Controller></Controller>
@@ -22,6 +22,9 @@ export default {
       this.$store.dispatch('Player/readyAction', {
         value: this.$refs.youtube.player
       })
+    },
+    end () {
+      this.$store.dispatch('Player/endAction')
     }
   },
   computed: {
