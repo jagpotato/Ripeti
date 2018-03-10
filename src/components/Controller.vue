@@ -39,24 +39,10 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-#youtube, #cover, #controller {
+#controller {
   position: absolute;
   top: 0px;
   left: 0px;
-}
-
-#youtube {
-  z-index: -1;
-}
-
-#cover {
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0);
-  z-index: 0;
-}
-
-#controller {
   z-index: 1;
 }
 </style>
