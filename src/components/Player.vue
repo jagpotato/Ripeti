@@ -22,6 +22,8 @@ export default {
       this.$store.dispatch('Player/readyAction', {
         value: this.$refs.youtube.player
       })
+      this.$store.dispatch('Controller/playButtonAction')
+      this.$store.dispatch('Controller/timerAction')
     },
     end () {
       this.$store.dispatch('Player/endAction')

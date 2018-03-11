@@ -9,23 +9,18 @@
 </template>
 
 <script>
-import {mapState} from 'vuex'
+import {mapState, mapActions} from 'vuex'
 
 export default {
   name: 'controller',
   methods: {
     playButtonAction () {
       this.$store.dispatch('Controller/playButtonAction')
-      this.loop()
+      this.$store.dispatch('Controller/timerAction')
     },
-    pauseButtonAction () {
-      this.$store.dispatch('Controller/pauseButtonAction')
-    },
-    loop () {
-      this.$store.dispatch('Controller/timerAction', {
-        loop: this.loop
-      })
-    }
+    ...mapActions('Controller', [
+      'pauseButtonAction'
+    ])
   },
   computed: {
     currentMovieTime: {

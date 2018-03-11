@@ -29,11 +29,15 @@ const Player = {
       }, false)
     },
     readyAction ({commit, state, rootState}, {value}) {
+      // youtube playerを初期化
       commit('initPlayer', value, {root: true})
+      // resizeイベントを追加
       window.addEventListener('resize', function () {
         commit('resize', null, {root: true})
       }, false)
+      // play，pauseボタンの初期化
       commit('initButton', null, {root: true})
+      // 動画時間の取得
       rootState.player.getDuration().then((value) => {
         commit('setDuration', value, {root: true})
         commit('muteVideo', null, {root: true})
@@ -61,7 +65,9 @@ const Controller = {
   actions: {
     playButtonAction ({commit, state}) {
       commit('toggleButton', null, {root: true})
-      commit('enableSeekbar')
+      if (state.isSeekbarDisabled === true) {
+        commit('enableSeekbar')
+      }
       commit('playVideo', null, {root: true})
     },
     pauseButtonAction ({commit, state}) {
@@ -76,13 +82,16 @@ const Controller = {
       commit('updateCurrentMovieTime', parseInt(value, 10), {root: true})
       commit('seekMovie', null, {root: true})
     },
-    timerAction ({commit, state, rootState}, {loop}) {
-      rootState.player.getCurrentTime().then((value) => {
-        commit('updateCurrentMovieTime', value, {root: true})
-        commit('updateTimer', requestAnimationFrame(loop), {root: true})
-      }).catch(() => {
-        console.log('error')
-      })
+    timerAction ({commit, state, rootState}) {
+      let loop = () => {
+        rootState.player.getCurrentTime().then((value) => {
+          commit('updateCurrentMovieTime', value, {root: true})
+          commit('updateTimer', requestAnimationFrame(loop), {root: true})
+        }).catch(() => {
+          console.log('error')
+        })
+      }
+      loop()
     }
   },
   getters: {}
