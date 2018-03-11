@@ -5,6 +5,7 @@
     <span class="time">{{currentTimeText}}</span>
     <input id="seekbar" type="range" v-model="currentMovieTime" min="0" :max="movieDuration" :disabled="isSeekbarDisabled">
     <span class="time">{{durationText}}</span>
+    <input id="volumebar" type="range" v-model="currentVolume" min="0" max="100">
   </div>
 </template>
 
@@ -29,6 +30,16 @@ export default {
       },
       set (value) {
         this.$store.dispatch('Controller/seekBarAction', {
+          value: value
+        })
+      }
+    },
+    currentVolume: {
+      get () {
+        return this.$store.state.currentVolume
+      },
+      set (value) {
+        this.$store.dispatch('Controller/volumeBarAction', {
           value: value
         })
       }

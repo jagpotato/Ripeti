@@ -82,6 +82,10 @@ const Controller = {
       commit('updateCurrentMovieTime', parseInt(value, 10), {root: true})
       commit('seekMovie', null, {root: true})
     },
+    volumeBarAction ({commit, state, rootState}, {value}) {
+      commit('unMuteVideo', null, {root: true})
+      commit('setVolume', parseInt(value, 10), {root: true})
+    },
     timerAction ({commit, state, rootState}) {
       let loop = () => {
         rootState.player.getCurrentTime().then((value) => {
@@ -105,6 +109,7 @@ export default new Vuex.Store({
     currentTimeText: '00:00',
     movieDuration: 1000,
     durationText: '00:00',
+    currentVolume: 0,
     isPlaying: false,
     isPlayButtonDisabled: true,
     isPauseButtonDisabled: true
@@ -124,6 +129,13 @@ export default new Vuex.Store({
     },
     muteVideo (state) {
       state.player.mute()
+    },
+    unMuteVideo (state) {
+      state.player.unMute()
+    },
+    setVolume (state, value) {
+      state.currentVolume = value
+      state.player.setVolume(state.currentVolume)
     },
     resize (state) {
       state.player.setSize(window.innerWidth, window.innerHeight)
