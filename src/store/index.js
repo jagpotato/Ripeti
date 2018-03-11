@@ -55,9 +55,21 @@ const Player = {
 const Controller = {
   namespaced: true,
   state: {
+    chapterList: [],
     isSeekbarDisabled: true
   },
   mutations: {
+    addChapter (state, {currentTime, currentTimeText}) {
+      state.chapterList.push({time: currentTime, text: currentTimeText})
+      state.chapterList.sort((a, b) => {
+        if (a.time < b.time) {
+          return -1
+        }
+        if (a.time > b.time) {
+          return 1
+        }
+      })
+    },
     enableSeekbar (state) {
       state.isSeekbarDisabled = false
     }
@@ -75,12 +87,25 @@ const Controller = {
       commit('stopTimer', null, {root: true})
       commit('pauseVideo', null, {root: true})
     },
+    chapterButtonAction ({commit, state}, {currentTime, currentTimeText}) {
+      const containsChapter = (chapterList, currentTime) => {
+        for (let i = 0; i < chapterList.length; i++) {
+          if (chapterList[i].time === currentTime) {
+            return true
+          }
+        }
+        return false
+      }
+      if (containsChapter(state.chapterList, currentTime) === false) {
+        commit('addChapter', {currentTime, currentTimeText})
+      }
+    },
     seekBarAction ({commit, state, rootState}, {value}) {
       if (rootState.isPlaying === false) {
         commit('pauseVideo', null, {root: true})
       }
-      commit('updateCurrentMovieTime', parseInt(value, 10), {root: true})
-      commit('seekMovie', null, {root: true})
+      commit('updateCurrentVideoTime', parseInt(value, 10), {root: true})
+      commit('seekVideo', null, {root: true})
     },
     volumeBarAction ({commit, state, rootState}, {value}) {
       commit('unMuteVideo', null, {root: true})
@@ -89,7 +114,7 @@ const Controller = {
     timerAction ({commit, state, rootState}) {
       let loop = () => {
         rootState.player.getCurrentTime().then((value) => {
-          commit('updateCurrentMovieTime', value, {root: true})
+          commit('updateCurrentVideoTime', value, {root: true})
           commit('updateTimer', requestAnimationFrame(loop), {root: true})
         }).catch(() => {
           console.log('error')
@@ -105,9 +130,9 @@ export default new Vuex.Store({
   state: {
     player: '',
     timer: '',
-    currentMovieTime: 0,
+    currentVideoTime: 0,
     currentTimeText: '00:00',
-    movieDuration: 1000,
+    videoDuration: 1000,
     durationText: '00:00',
     currentVolume: 0,
     isPlaying: false,
@@ -140,13 +165,13 @@ export default new Vuex.Store({
     resize (state) {
       state.player.setSize(window.innerWidth, window.innerHeight)
     },
-    seekMovie (state) {
-      state.player.seekTo(state.currentMovieTime, true)
+    seekVideo (state) {
+      state.player.seekTo(state.currentVideoTime, true)
     },
     setDuration (state, value) {
-      state.movieDuration = value
-      let minutes = ('0' + Math.floor(state.movieDuration / 60).toString(10)).substr(-2)
-      let seconds = ('0' + Math.floor(state.movieDuration % 60).toString(10)).substr(-2)
+      state.videoDuration = value
+      let minutes = ('0' + Math.floor(state.videoDuration / 60).toString(10)).substr(-2)
+      let seconds = ('0' + Math.floor(state.videoDuration % 60).toString(10)).substr(-2)
       state.durationText = minutes + ':' + seconds
     },
     initButton (state) {
@@ -164,10 +189,10 @@ export default new Vuex.Store({
     stopTimer (state) {
       cancelAnimationFrame(state.timer)
     },
-    updateCurrentMovieTime (state, value) {
-      state.currentMovieTime = Math.floor(value)
-      let minutes = ('0' + Math.floor(state.currentMovieTime / 60).toString(10)).substr(-2)
-      let seconds = ('0' + Math.floor(state.currentMovieTime % 60).toString(10)).substr(-2)
+    updateCurrentVideoTime (state, value) {
+      state.currentVideoTime = Math.floor(value)
+      let minutes = ('0' + Math.floor(state.currentVideoTime / 60).toString(10)).substr(-2)
+      let seconds = ('0' + Math.floor(state.currentVideoTime % 60).toString(10)).substr(-2)
       state.currentTimeText = minutes + ':' + seconds
     }
   },

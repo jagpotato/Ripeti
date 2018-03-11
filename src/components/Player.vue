@@ -10,11 +10,11 @@
 
 <script>
 import Controller from '@/components/Controller'
-import {mapState} from 'vuex'
+import {mapState, mapActions} from 'vuex'
 
 export default {
   name: 'player',
-  beforeDestroy: function () {
+  beforeDestroy () {
     this.$store.dispatch('Player/removeEventAction')
   },
   methods: {
@@ -25,9 +25,9 @@ export default {
       this.$store.dispatch('Controller/playButtonAction')
       this.$store.dispatch('Controller/timerAction')
     },
-    end () {
-      this.$store.dispatch('Player/endAction')
-    }
+    ...mapActions('Player', {
+      end: 'endAction'
+    })
   },
   computed: {
     ...mapState('Player', [

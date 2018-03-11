@@ -1,11 +1,15 @@
 <template>
   <div id="controller">
-    <button @click="playButtonAction" :disabled="isPlayButtonDisabled">play</button>
-    <button @click="pauseButtonAction" :disabled="isPauseButtonDisabled">pause</button>
+    <button @click="clickPlayButton" :disabled="isPlayButtonDisabled">play</button>
+    <button @click="clickPauseButton" :disabled="isPauseButtonDisabled">pause</button>
     <span class="time">{{currentTimeText}}</span>
-    <input id="seekbar" type="range" v-model="currentMovieTime" min="0" :max="movieDuration" :disabled="isSeekbarDisabled">
+    <input id="seekbar" type="range" v-model="currentVideoTime" min="0" :max="videoDuration" :disabled="isSeekbarDisabled">
     <span class="time">{{durationText}}</span>
     <input id="volumebar" type="range" v-model="currentVolume" min="0" max="100">
+    <button @click="clickChapterButton">chapter</button>
+    <ul id="chapterList">
+      <li v-for="chapter in chapterList" :key="chapter.time" @click="selectChapter(chapter)">{{chapter.text}}</li>
+    </ul>
   </div>
 </template>
 
@@ -15,18 +19,29 @@ import {mapState, mapActions} from 'vuex'
 export default {
   name: 'controller',
   methods: {
-    playButtonAction () {
+    clickPlayButton () {
       this.$store.dispatch('Controller/playButtonAction')
       this.$store.dispatch('Controller/timerAction')
     },
-    ...mapActions('Controller', [
-      'pauseButtonAction'
-    ])
+    clickChapterButton () {
+      this.$store.dispatch('Controller/chapterButtonAction', {
+        currentTime: this.currentVideoTime,
+        currentTimeText: this.currentTimeText
+      })
+    },
+    selectChapter (chapter) {
+      this.$store.dispatch('Controller/seekBarAction', {
+        value: chapter.time.toString(10)
+      })
+    },
+    ...mapActions('Controller', {
+      clickPauseButton: 'pauseButtonAction'
+    })
   },
   computed: {
-    currentMovieTime: {
+    currentVideoTime: {
       get () {
-        return this.$store.state.currentMovieTime
+        return this.$store.state.currentVideoTime
       },
       set (value) {
         this.$store.dispatch('Controller/seekBarAction', {
@@ -45,11 +60,12 @@ export default {
       }
     },
     ...mapState('Controller', [
+      'chapterList',
       'isSeekbarDisabled'
     ]),
     ...mapState([
       'currentTimeText',
-      'movieDuration',
+      'videoDuration',
       'durationText',
       'isPlayButtonDisabled',
       'isPauseButtonDisabled'
@@ -68,5 +84,9 @@ export default {
 }
 .time {
   color: white;
+}
+#chapterList {
+  color: white;
+  list-style: none;
 }
 </style>
