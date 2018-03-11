@@ -78,7 +78,7 @@ export default {
 <style scoped>
 #controller {
   position: absolute;
-  top: 0px;
+  bottom: 0px;
   left: 0px;
   z-index: 1;
 }
