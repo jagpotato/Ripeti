@@ -1,7 +1,8 @@
 <template>
   <div id="player">
+    <Header></Header>
     <div>
-      <youtube id="youtube" :video-id="videoId" :height="height" :width="width" :player-vars="playerVars" ref="youtube" @ready="ready" @ended="end"></youtube>
+      <youtube id="youtube" :video-id="videoId" :height="height" :width="width" :player-vars="playerVars" ref="youtube" @ready="ready" @playing="playing" @cued="cued" @ended="end"></youtube>
       <div id="cover"></div>
     </div>
     <Controller></Controller>
@@ -9,6 +10,7 @@
 </template>
 
 <script>
+import Header from '@/components/Header'
 import Controller from '@/components/Controller'
 import {mapState, mapActions} from 'vuex'
 
@@ -19,9 +21,17 @@ export default {
   },
   methods: {
     ready () {
+      console.log('ready')
       this.$store.dispatch('Player/readyAction', {
         value: this.$refs.youtube.player
       })
+    },
+    playing () {
+      console.log('playing')
+      this.$store.dispatch('Player/playingAction')
+    },
+    cued () {
+      console.log('cued')
       this.$store.dispatch('Controller/playButtonAction')
       this.$store.dispatch('Controller/timerAction')
     },
@@ -38,6 +48,7 @@ export default {
     ])
   },
   components: {
+    Header,
     Controller
   }
 }

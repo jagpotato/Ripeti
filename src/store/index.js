@@ -5,7 +5,7 @@ import VueYoutube from 'vue-youtube'
 Vue.use(Vuex)
 Vue.use(VueYoutube)
 
-const VIDEO_ID = 'tpxVMAu1O0Q'
+// const VIDEO_ID = 'tpxVMAu1O0Q'
 // const VIDEO_ID = '4DmWPUhZ8lM'
 
 const Player = {
@@ -13,7 +13,7 @@ const Player = {
   state: {
     height: window.innerHeight,
     width: window.innerWidth,
-    videoId: VIDEO_ID,
+    // videoId: VIDEO_ID,
     playerVars: {
       controls: 0,
       modestbranding: 1,
@@ -37,19 +37,53 @@ const Player = {
       }, false)
       // play，pauseボタンの初期化
       commit('initButton', null, {root: true})
-      // 動画時間の取得
-      rootState.player.getDuration().then((value) => {
-        commit('setDuration', value, {root: true})
-        commit('muteVideo', null, {root: true})
-      }).catch(() => {
-        console.log('error')
-      })
+      //
+      commit('cueVideo', 'tpxVMAu1O0Q', {root: true})
+    },
+    playingAction ({commit, state, rootState}) {
+      if (rootState.videoDuration === 0) {
+        // 動画時間の取得
+        rootState.player.getDuration().then((value) => {
+          console.log('duration')
+          commit('setDuration', value, {root: true})
+          commit('muteVideo', null, {root: true})
+        }).catch(() => {
+          console.log('error')
+        })
+      }
     },
     endAction ({commit, state}) {
       commit('initButton', null, {root: true})
       commit('stopTimer', null, {root: true})
     }
   }
+}
+
+const Header = {
+  namespaced: true,
+  state: {
+    url: ''
+  },
+  mutations: {
+    initUrl (state) {
+      state.url = ''
+    },
+    updateUrl (state, url) {
+      state.url = url
+    }
+  },
+  actions: {
+    searchAction ({commit, state, rootState}) {
+      commit('initDuration', null, {root: true})
+      commit('cueVideo', '4DmWPUhZ8lM', {root: true})
+      commit('initButton', null, {root: true})
+      commit('initUrl')
+    },
+    urlAction ({commit, state}, {url}) {
+      commit('updateUrl', url)
+    }
+  },
+  getters: {}
 }
 
 const Controller = {
@@ -132,7 +166,7 @@ export default new Vuex.Store({
     timer: '',
     currentVideoTime: 0,
     currentTimeText: '00:00',
-    videoDuration: 1000,
+    videoDuration: 0,
     durationText: '00:00',
     currentVolume: 0,
     isPlaying: false,
@@ -142,6 +176,9 @@ export default new Vuex.Store({
   mutations: {
     initPlayer (state, value) {
       state.player = value
+    },
+    cueVideo (state, id) {
+      state.player.cueVideoById(id)
     },
     playVideo (state) {
       if (state.isPlaying === false) {
@@ -158,6 +195,10 @@ export default new Vuex.Store({
     unMuteVideo (state) {
       state.player.unMute()
     },
+    changeVideo (state, id) {
+      state.Player.videoId = id
+      // state.player.cueVideoById(id)
+    },
     setVolume (state, value) {
       state.currentVolume = value
       state.player.setVolume(state.currentVolume)
@@ -167,6 +208,9 @@ export default new Vuex.Store({
     },
     seekVideo (state) {
       state.player.seekTo(state.currentVideoTime, true)
+    },
+    initDuration (state) {
+      state.videoDuration = 0
     },
     setDuration (state, value) {
       state.videoDuration = value
@@ -198,6 +242,7 @@ export default new Vuex.Store({
   },
   modules: {
     Player,
+    Header,
     Controller
   }
 })
