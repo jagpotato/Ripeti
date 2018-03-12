@@ -2,7 +2,7 @@
   <div id="player">
     <Header></Header>
     <div>
-      <youtube id="youtube" :video-id="videoId" :height="height" :width="width" :player-vars="playerVars" ref="youtube" @ready="ready" @playing="playing" @cued="cued" @ended="end"></youtube>
+      <youtube id="youtube" :height="height" :width="width" :player-vars="playerVars" ref="youtube" @ready="ready" @playing="playing" @cued="cued" @ended="end"></youtube>
       <div id="cover"></div>
     </div>
     <Controller></Controller>
@@ -21,17 +21,14 @@ export default {
   },
   methods: {
     ready () {
-      console.log('ready')
       this.$store.dispatch('Player/readyAction', {
         value: this.$refs.youtube.player
       })
     },
     playing () {
-      console.log('playing')
       this.$store.dispatch('Player/playingAction')
     },
     cued () {
-      console.log('cued')
       this.$store.dispatch('Controller/playButtonAction')
       this.$store.dispatch('Controller/timerAction')
     },
@@ -41,7 +38,6 @@ export default {
   },
   computed: {
     ...mapState('Player', [
-      'videoId',
       'height',
       'width',
       'playerVars'

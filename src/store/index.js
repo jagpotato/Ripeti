@@ -13,7 +13,6 @@ const Player = {
   state: {
     height: window.innerHeight,
     width: window.innerWidth,
-    // videoId: VIDEO_ID,
     playerVars: {
       controls: 0,
       modestbranding: 1,
@@ -44,7 +43,6 @@ const Player = {
       if (rootState.videoDuration === 0) {
         // 動画時間の取得
         rootState.player.getDuration().then((value) => {
-          console.log('duration')
           commit('setDuration', value, {root: true})
           commit('muteVideo', null, {root: true})
         }).catch(() => {
@@ -74,10 +72,16 @@ const Header = {
   },
   actions: {
     searchAction ({commit, state, rootState}) {
-      commit('initDuration', null, {root: true})
-      commit('cueVideo', '4DmWPUhZ8lM', {root: true})
-      commit('initButton', null, {root: true})
-      commit('initUrl')
+      if (state.url !== '') {
+        let splitUrl = state.url.match(/v=[0-9a-zA-Z-_]+/)
+        if (splitUrl !== null) {
+          // 動画を右クリック，「動画のURLをコピー」用 /\/[0-9a-zA-Z-_]{11}/
+          let id = splitUrl[0].substr(2)
+          commit('cueVideo', id, {root: true})
+          commit('initButton', null, {root: true})
+        }
+        commit('initUrl')
+      }
     },
     urlAction ({commit, state}, {url}) {
       commit('updateUrl', url)
@@ -178,6 +182,7 @@ export default new Vuex.Store({
       state.player = value
     },
     cueVideo (state, id) {
+      state.videoDuration = 0
       state.player.cueVideoById(id)
     },
     playVideo (state) {
@@ -195,10 +200,6 @@ export default new Vuex.Store({
     unMuteVideo (state) {
       state.player.unMute()
     },
-    changeVideo (state, id) {
-      state.Player.videoId = id
-      // state.player.cueVideoById(id)
-    },
     setVolume (state, value) {
       state.currentVolume = value
       state.player.setVolume(state.currentVolume)
@@ -209,14 +210,15 @@ export default new Vuex.Store({
     seekVideo (state) {
       state.player.seekTo(state.currentVideoTime, true)
     },
-    initDuration (state) {
-      state.videoDuration = 0
-    },
     setDuration (state, value) {
       state.videoDuration = value
-      let minutes = ('0' + Math.floor(state.videoDuration / 60).toString(10)).substr(-2)
+      let hours = Math.floor(state.videoDuration / 60 / 60)
+      let minutes = ('0' + (Math.floor(state.videoDuration / 60) % 60).toString(10)).substr(-2)
       let seconds = ('0' + Math.floor(state.videoDuration % 60).toString(10)).substr(-2)
       state.durationText = minutes + ':' + seconds
+      if (hours > 0) {
+        state.durationText = ('0' + hours.toString(10)).substr(-2) + ':' + state.durationText
+      }
     },
     initButton (state) {
       state.isPlaying = false
@@ -235,9 +237,15 @@ export default new Vuex.Store({
     },
     updateCurrentVideoTime (state, value) {
       state.currentVideoTime = Math.floor(value)
-      let minutes = ('0' + Math.floor(state.currentVideoTime / 60).toString(10)).substr(-2)
+      let minutes = ('0' + (Math.floor(state.currentVideoTime / 60) % 60).toString(10)).substr(-2)
       let seconds = ('0' + Math.floor(state.currentVideoTime % 60).toString(10)).substr(-2)
-      state.currentTimeText = minutes + ':' + seconds
+      let durationHours = Math.floor(state.videoDuration / 60 / 60)
+      if (durationHours > 0) {
+        let hours = ('0' + Math.floor(state.currentVideoTime / 60 / 60).toString(10)).substr(-2)
+        state.currentTimeText = hours + ':' + minutes + ':' + seconds
+      } else {
+        state.currentTimeText = minutes + ':' + seconds
+      }
     }
   },
   modules: {
