@@ -5,7 +5,7 @@ import VueYoutube from 'vue-youtube'
 Vue.use(Vuex)
 Vue.use(VueYoutube)
 
-const VIDEO_ID = 'tpxVMAu1O0Q'
+// const VIDEO_ID = 'tpxVMAu1O0Q'
 // const VIDEO_ID = '4DmWPUhZ8lM'
 
 const Player = {
@@ -13,7 +13,6 @@ const Player = {
   state: {
     height: window.innerHeight,
     width: window.innerWidth,
-    videoId: VIDEO_ID,
     playerVars: {
       controls: 0,
       modestbranding: 1,
@@ -37,19 +36,58 @@ const Player = {
       }, false)
       // play，pauseボタンの初期化
       commit('initButton', null, {root: true})
-      // 動画時間の取得
-      rootState.player.getDuration().then((value) => {
-        commit('setDuration', value, {root: true})
-        commit('muteVideo', null, {root: true})
-      }).catch(() => {
-        console.log('error')
-      })
+      //
+      commit('cueVideo', 'tpxVMAu1O0Q', {root: true})
+    },
+    playingAction ({commit, state, rootState}) {
+      if (rootState.videoDuration === 0) {
+        // 動画時間の取得
+        rootState.player.getDuration().then((value) => {
+          commit('setDuration', value, {root: true})
+          commit('muteVideo', null, {root: true})
+        }).catch(() => {
+          console.log('error')
+        })
+      }
     },
     endAction ({commit, state}) {
       commit('initButton', null, {root: true})
       commit('stopTimer', null, {root: true})
     }
   }
+}
+
+const Header = {
+  namespaced: true,
+  state: {
+    url: ''
+  },
+  mutations: {
+    initUrl (state) {
+      state.url = ''
+    },
+    updateUrl (state, url) {
+      state.url = url
+    }
+  },
+  actions: {
+    searchAction ({commit, state, rootState}) {
+      if (state.url !== '') {
+        let splitUrl = state.url.match(/v=[0-9a-zA-Z-_]+/)
+        if (splitUrl !== null) {
+          // 動画を右クリック，「動画のURLをコピー」用 /\/[0-9a-zA-Z-_]{11}/
+          let id = splitUrl[0].substr(2)
+          commit('cueVideo', id, {root: true})
+          commit('initButton', null, {root: true})
+        }
+        commit('initUrl')
+      }
+    },
+    urlAction ({commit, state}, {url}) {
+      commit('updateUrl', url)
+    }
+  },
+  getters: {}
 }
 
 const Controller = {
@@ -132,7 +170,7 @@ export default new Vuex.Store({
     timer: '',
     currentVideoTime: 0,
     currentTimeText: '00:00',
-    videoDuration: 1000,
+    videoDuration: 0,
     durationText: '00:00',
     currentVolume: 0,
     isPlaying: false,
@@ -142,6 +180,10 @@ export default new Vuex.Store({
   mutations: {
     initPlayer (state, value) {
       state.player = value
+    },
+    cueVideo (state, id) {
+      state.videoDuration = 0
+      state.player.cueVideoById(id)
     },
     playVideo (state) {
       if (state.isPlaying === false) {
@@ -170,9 +212,13 @@ export default new Vuex.Store({
     },
     setDuration (state, value) {
       state.videoDuration = value
-      let minutes = ('0' + Math.floor(state.videoDuration / 60).toString(10)).substr(-2)
+      let hours = Math.floor(state.videoDuration / 60 / 60)
+      let minutes = ('0' + (Math.floor(state.videoDuration / 60) % 60).toString(10)).substr(-2)
       let seconds = ('0' + Math.floor(state.videoDuration % 60).toString(10)).substr(-2)
       state.durationText = minutes + ':' + seconds
+      if (hours > 0) {
+        state.durationText = ('0' + hours.toString(10)).substr(-2) + ':' + state.durationText
+      }
     },
     initButton (state) {
       state.isPlaying = false
@@ -191,13 +237,20 @@ export default new Vuex.Store({
     },
     updateCurrentVideoTime (state, value) {
       state.currentVideoTime = Math.floor(value)
-      let minutes = ('0' + Math.floor(state.currentVideoTime / 60).toString(10)).substr(-2)
+      let minutes = ('0' + (Math.floor(state.currentVideoTime / 60) % 60).toString(10)).substr(-2)
       let seconds = ('0' + Math.floor(state.currentVideoTime % 60).toString(10)).substr(-2)
-      state.currentTimeText = minutes + ':' + seconds
+      let durationHours = Math.floor(state.videoDuration / 60 / 60)
+      if (durationHours > 0) {
+        let hours = ('0' + Math.floor(state.currentVideoTime / 60 / 60).toString(10)).substr(-2)
+        state.currentTimeText = hours + ':' + minutes + ':' + seconds
+      } else {
+        state.currentTimeText = minutes + ':' + seconds
+      }
     }
   },
   modules: {
     Player,
+    Header,
     Controller
   }
 })
