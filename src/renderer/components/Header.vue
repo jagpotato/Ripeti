@@ -2,17 +2,19 @@
   <div id="header">
     <div id="search">
       <input type="url" v-model="url">
-      <button id="searchButton" @click="clickSearchButton">search</button>
+      <button id="searchButton" @click="submitUrl">search</button>
     </div>
   </div>
 </template>
 
 <script>
+import {mapActions} from 'vuex'
+
 export default {
   methods: {
-    clickSearchButton () {
-      this.$store.dispatch('Header/searchAction')
-    }
+    ...mapActions('Header', {
+      submitUrl: 'searchVideo'
+    })
   },
   computed: {
     url: {
@@ -20,7 +22,7 @@ export default {
         return this.$store.state.Header.url
       },
       set (value) {
-        this.$store.dispatch('Header/urlAction', {
+        this.$store.dispatch('Header/inputUrl', {
           url: value
         })
       }

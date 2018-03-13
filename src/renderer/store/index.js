@@ -7,13 +7,6 @@ import path from 'path'
 Vue.use(Vuex)
 Vue.use(VueYoutube)
 
-// const test = {
-//   videoId: 'tpxVMAu1O0Q',
-//   chapterList: [
-//     {time: 50, text: '00:50'}
-//   ]
-// }
-
 const db = new Datastore({
   filename: path.join(__dirname, 'db', 'chapterList.db'),
   autoload: true
@@ -21,10 +14,14 @@ const db = new Datastore({
 
 // const VIDEO_ID = 'tpxVMAu1O0Q'
 // const VIDEO_ID = '4DmWPUhZ8lM'
+// v=4DmWPUhZ8lM
+// https://www.youtube.com/watch?v=9ydA4cXjers
 
 const Player = {
   namespaced: true,
   state: {
+    player: '',
+    videoId: '',
     height: window.innerHeight,
     width: window.innerWidth,
     playerVars: {
@@ -32,54 +29,135 @@ const Player = {
       modestbranding: 1,
       rel: 0,
       showinfo: 0
+    },
+    currentVideoTime: 0,
+    videoDuration: 0,
+    currentVolume: 0,
+    isEnd: false
+  },
+  getters: {
+    getMinutesText (state) {
+      return (time) => {
+        return ('0' + (Math.floor(time / 60) % 60)).substr(-2)
+      }
+    },
+    getSecondsText (state) {
+      return (time) => {
+        return ('0' + Math.floor(time % 60)).substr(-2)
+      }
+    },
+    durationText (state, getters) {
+      const hours = Math.floor(state.videoDuration / 60 / 60)
+      const minutes = getters.getMinutesText(state.videoDuration)
+      const seconds = getters.getSecondsText(state.videoDuration)
+      let text = minutes + ':' + seconds
+      if (hours > 0) {
+        text = ('0' + hours).substr(-2) + ':' + text
+      }
+      return text
+    },
+    currentTimeText (state, getters) {
+      const minutes = getters.getMinutesText(state.currentVideoTime)
+      const seconds = getters.getSecondsText(state.currentVideoTime)
+      const durationHours = Math.floor(state.videoDuration / 60 / 60)
+      let text
+      if (durationHours > 0) {
+        let hours = ('0' + Math.floor(state.currentVideoTime / 60 / 60)).substr(-2)
+        text = hours + ':' + minutes + ':' + seconds
+      } else {
+        text = minutes + ':' + seconds
+      }
+      return text
     }
   },
-  mutations: {},
+  mutations: {
+    initPlayer (state, value) {
+      state.player = value
+    },
+    cueVideo (state, id) {
+      state.videoId = id
+      state.videoDuration = 0
+      state.player.cueVideoById(state.videoId)
+    },
+    playVideo (state) {
+      if (state.isEnd === true) {
+        state.isEnd = false
+      }
+      state.player.playVideo()
+    },
+    pauseVideo (state) {
+      state.player.pauseVideo()
+    },
+    setEndFlag (state) {
+      state.isEnd = true
+    },
+    muteVideo (state) {
+      state.player.mute()
+    },
+    setVolume (state, value) {
+      state.player.unMute()
+      state.currentVolume = value
+      state.player.setVolume(state.currentVolume)
+    },
+    resize (state) {
+      state.player.setSize(window.innerWidth, window.innerHeight)
+    },
+    seekVideo (state) {
+      state.player.seekTo(state.currentVideoTime, true)
+    },
+    setDuration (state, value) {
+      state.videoDuration = value
+    },
+    updateCurrentVideoTime (state, value) {
+      state.currentVideoTime = Math.floor(value)
+    }
+  },
   actions: {
-    removeEventAction ({commit, state}) {
-      window.removeEventListener('resize', function () {
-        commit('resize', null, {root: true})
+    removeEvent ({commit, state}) {
+      window.removeEventListener('resize', () => {
+        commit('resize')
       }, false)
     },
-    readyAction ({commit, state, rootState}, {value}) {
+    initApp ({commit, state}, {value}) {
       // youtube playerを初期化
-      commit('initPlayer', value, {root: true})
+      commit('initPlayer', value)
       // resizeイベントを追加
-      window.addEventListener('resize', function () {
-        commit('resize', null, {root: true})
+      window.addEventListener('resize', () => {
+        commit('resize')
       }, false)
       // play，pauseボタンの初期化
-      commit('initButton', null, {root: true})
+      commit('Controller/initButton', null, {root: true})
       //
-      commit('cueVideo', 'tpxVMAu1O0Q', {root: true})
+      commit('cueVideo', 'tpxVMAu1O0Q')
     },
-    cuedAction ({commit, state, rootState}) {
-      db.findOne({'videoId': rootState.videoId}, (err, docs) => {
+    initChapterList ({commit, state}) {
+      db.findOne({'videoId': state.videoId}, (err, docs) => {
         if (err) {
           console.log(err)
         }
         if (docs === null) {
           // dbにvideoIdが存在しない場合，追加
-          db.insert({videoId: rootState.videoId, chapterList: []})
+          db.insert({videoId: state.videoId, chapterList: []})
         }
         // dbからchapterListを取得
         commit('Controller/loadChapterList', docs, {root: true})
       })
     },
-    playingAction ({commit, state, rootState}) {
-      if (rootState.videoDuration === 0) {
+    getVideoDuration ({commit, state}) {
+      if (state.videoDuration === 0) {
         // 動画時間の取得
-        rootState.player.getDuration().then((value) => {
-          commit('setDuration', value, {root: true})
-          commit('muteVideo', null, {root: true})
+        state.player.getDuration().then((value) => {
+          commit('setDuration', value)
+          commit('muteVideo')
         }).catch(() => {
           console.log('error')
         })
       }
     },
-    endAction ({commit, state}) {
-      commit('initButton', null, {root: true})
-      commit('stopTimer', null, {root: true})
+    endVideo ({commit, state}) {
+      commit('setEndFlag')
+      commit('Controller/initButton', null, {root: true})
+      commit('Controller/stopTimer', null, {root: true})
     }
   }
 }
@@ -89,6 +167,7 @@ const Header = {
   state: {
     url: ''
   },
+  getters: {},
   mutations: {
     initUrl (state) {
       state.url = ''
@@ -98,35 +177,63 @@ const Header = {
     }
   },
   actions: {
-    searchAction ({commit, state, rootState}) {
+    searchVideo ({commit, state}) {
       if (state.url !== '') {
-        let splitUrl = state.url.match(/v=[0-9a-zA-Z-_]+/)
+        const splitUrl = state.url.match(/v=[0-9a-zA-Z-_]+/)
         // 動画を右クリック，「動画のURLをコピー」用 /\/[0-9a-zA-Z-_]{11}/
         if (splitUrl !== null) {
-          let id = splitUrl[0].substr(2)
-          commit('cueVideo', id, {root: true})
-          commit('initButton', null, {root: true})
+          const id = splitUrl[0].substr(2)
+          commit('Player/cueVideo', id, {root: true})
+          commit('Controller/initButton', null, {root: true})
         }
         commit('initUrl')
       }
     },
-    urlAction ({commit, state}, {url}) {
+    inputUrl ({commit, state}, {url}) {
       commit('updateUrl', url)
     }
-  },
-  getters: {}
+  }
 }
 
 const Controller = {
   namespaced: true,
   state: {
+    timer: '',
     chapterList: [],
+    isPlayButtonDisabled: true,
+    isPauseButtonDisabled: true,
     isSeekbarDisabled: true
   },
+  getters: {
+    getChapterIndex (state) {
+      return (time) => {
+        for (let i = 0; i < state.chapterList.length; i++) {
+          if (state.chapterList[i].time === time) {
+            return i
+          }
+        }
+        return -1
+      }
+    }
+  },
   mutations: {
+    updateTimer (state, timer) {
+      state.timer = timer
+    },
+    stopTimer (state) {
+      cancelAnimationFrame(state.timer)
+    },
+    initButton (state) {
+      state.isPlayButtonDisabled = false
+      state.isPauseButtonDisabled = true
+    },
+    toggleButton (state) {
+      state.isPlayButtonDisabled = !state.isPlayButtonDisabled
+      state.isPauseButtonDisabled = !state.isPauseButtonDisabled
+    },
     loadChapterList (state, dbData) {
       if (dbData === null) {
-        state.chapterList = ''
+        state.chapterList = []
       } else {
         state.chapterList = dbData.chapterList
       }
@@ -142,7 +249,6 @@ const Controller = {
           return 1
         }
       })
-      // dbのchapterListを更新
     },
     removeChapter (state, index) {
       state.chapterList.splice(index, 1)
@@ -152,154 +258,63 @@ const Controller = {
     }
   },
   actions: {
-    playButtonAction ({commit, state}) {
-      commit('toggleButton', null, {root: true})
+    playVideo ({commit, state, rootState}) {
+      // pauseボタンを使用可能にする
+      commit('toggleButton')
+      // シークバーを使用可能にする
       if (state.isSeekbarDisabled === true) {
         commit('enableSeekbar')
       }
-      commit('playVideo', null, {root: true})
-    },
-    pauseButtonAction ({commit, state}) {
-      commit('toggleButton', null, {root: true})
-      commit('stopTimer', null, {root: true})
-      commit('pauseVideo', null, {root: true})
-    },
-    chapterButtonAction ({commit, state, getters, rootState}, {currentTime, currentTimeText}) {
-      // chapterListに同じ時間のchapterが含まれていない場合，chapterを追加
-      if (getters.getChapterIndex(currentTime) === -1) {
-        commit('addChapter', {currentTime, currentTimeText})
-        db.update({'videoId': rootState.videoId}, {$set: {chapterList: state.chapterList}})
-      }
-    },
-    removeChapterAction ({commit, state, getters, rootState}, {value}) {
-      const index = getters.getChapterIndex(value.time)
-      commit('removeChapter', index)
-      db.update({'videoId': rootState.videoId}, {$set: {chapterList: state.chapterList}})
-    },
-    seekBarAction ({commit, state, rootState}, {value}) {
-      console.log(state.chapterList)
-      if (rootState.isPlaying === false) {
-        commit('pauseVideo', null, {root: true})
-      }
-      commit('updateCurrentVideoTime', parseInt(value, 10), {root: true})
-      commit('seekVideo', null, {root: true})
-    },
-    volumeBarAction ({commit, state, rootState}, {value}) {
-      commit('unMuteVideo', null, {root: true})
-      commit('setVolume', parseInt(value, 10), {root: true})
-    },
-    timerAction ({commit, state, rootState}) {
+      // requestAnimationFrame
       let loop = () => {
-        rootState.player.getCurrentTime().then((value) => {
-          commit('updateCurrentVideoTime', value, {root: true})
-          commit('updateTimer', requestAnimationFrame(loop), {root: true})
+        // 現在の再生時間を取得
+        rootState.Player.player.getCurrentTime().then((value) => {
+          commit('Player/updateCurrentVideoTime', value, {root: true})
+          commit('updateTimer', requestAnimationFrame(loop))
         }).catch(() => {
           console.log('error')
         })
       }
+      // 動画を再生
+      commit('Player/playVideo', null, {root: true})
+      // requestAnimationFrame開始
       loop()
-    }
-  },
-  getters: {
-    getChapterIndex (state) {
-      return (time) => {
-        for (let i = 0; i < state.chapterList.length; i++) {
-          if (state.chapterList[i].time === time) {
-            return i
-          }
-        }
-        return -1
+    },
+    pauseVideo ({commit, state}) {
+      commit('toggleButton')
+      commit('stopTimer')
+      commit('Player/pauseVideo', null, {root: true})
+    },
+    addChapter ({commit, state, getters, rootState}, {currentTime, currentTimeText}) {
+      // chapterListに同じ時間のchapterが含まれていない場合，chapterを追加
+      if (getters.getChapterIndex(currentTime) === -1) {
+        commit('addChapter', {currentTime, currentTimeText})
+        db.update({'videoId': rootState.Player.videoId}, {$set: {chapterList: state.chapterList}})
       }
+    },
+    removeChapter ({commit, state, getters, rootState}, {value}) {
+      const index = getters.getChapterIndex(value.time)
+      commit('removeChapter', index)
+      db.update({'videoId': rootState.Player.videoId}, {$set: {chapterList: state.chapterList}})
+    },
+    moveSeekBar ({commit, state, rootState}, {value}) {
+      if (rootState.Player.isEnd === true) {
+        commit('Player/pauseVideo', null, {root: true})
+      }
+      commit('Player/updateCurrentVideoTime', parseInt(value, 10), {root: true})
+      commit('Player/seekVideo', null, {root: true})
+    },
+    moveVolumeBar ({commit, state}, {value}) {
+      commit('Player/setVolume', parseInt(value, 10), {root: true})
     }
   }
 }
 
 export default new Vuex.Store({
-  state: {
-    player: '',
-    timer: '',
-    videoId: '',
-    currentVideoTime: 0,
-    currentTimeText: '00:00',
-    videoDuration: 0,
-    durationText: '00:00',
-    currentVolume: 0,
-    isPlaying: false,
-    isPlayButtonDisabled: true,
-    isPauseButtonDisabled: true
-  },
-  mutations: {
-    initPlayer (state, value) {
-      state.player = value
-    },
-    cueVideo (state, id) {
-      state.videoId = id
-      state.videoDuration = 0
-      state.player.cueVideoById(state.videoId)
-    },
-    playVideo (state) {
-      if (state.isPlaying === false) {
-        state.isPlaying = true
-      }
-      state.player.playVideo()
-    },
-    pauseVideo (state) {
-      state.player.pauseVideo()
-    },
-    muteVideo (state) {
-      state.player.mute()
-    },
-    unMuteVideo (state) {
-      state.player.unMute()
-    },
-    setVolume (state, value) {
-      state.currentVolume = value
-      state.player.setVolume(state.currentVolume)
-    },
-    resize (state) {
-      state.player.setSize(window.innerWidth, window.innerHeight)
-    },
-    seekVideo (state) {
-      state.player.seekTo(state.currentVideoTime, true)
-    },
-    setDuration (state, value) {
-      state.videoDuration = value
-      let hours = Math.floor(state.videoDuration / 60 / 60)
-      let minutes = ('0' + (Math.floor(state.videoDuration / 60) % 60).toString(10)).substr(-2)
-      let seconds = ('0' + Math.floor(state.videoDuration % 60).toString(10)).substr(-2)
-      state.durationText = minutes + ':' + seconds
-      if (hours > 0) {
-        state.durationText = ('0' + hours.toString(10)).substr(-2) + ':' + state.durationText
-      }
-    },
-    initButton (state) {
-      state.isPlaying = false
-      state.isPlayButtonDisabled = false
-      state.isPauseButtonDisabled = true
-    },
-    toggleButton (state) {
-      state.isPlayButtonDisabled = !state.isPlayButtonDisabled
-      state.isPauseButtonDisabled = !state.isPauseButtonDisabled
-    },
-    updateTimer (state, timer) {
-      state.timer = timer
-    },
-    stopTimer (state) {
-      cancelAnimationFrame(state.timer)
-    },
-    updateCurrentVideoTime (state, value) {
-      state.currentVideoTime = Math.floor(value)
-      let minutes = ('0' + (Math.floor(state.currentVideoTime / 60) % 60).toString(10)).substr(-2)
-      let seconds = ('0' + Math.floor(state.currentVideoTime % 60).toString(10)).substr(-2)
-      let durationHours = Math.floor(state.videoDuration / 60 / 60)
-      if (durationHours > 0) {
-        let hours = ('0' + Math.floor(state.currentVideoTime / 60 / 60).toString(10)).substr(-2)
-        state.currentTimeText = hours + ':' + minutes + ':' + seconds
-      } else {
-        state.currentTimeText = minutes + ':' + seconds
-      }
-    }
-  },
+  state: {},
+  getters: {},
+  mutations: {},
+  actions: {},
   modules: {
     Player,
     Header,

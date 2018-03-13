@@ -1,12 +1,12 @@
 <template>
   <div id="controller">
-    <button @click="clickPlayButton" :disabled="isPlayButtonDisabled">play</button>
-    <button @click="clickPauseButton" :disabled="isPauseButtonDisabled">pause</button>
+    <button @click="playVideo" :disabled="isPlayButtonDisabled">play</button>
+    <button @click="pauseVideo" :disabled="isPauseButtonDisabled">pause</button>
     <span class="time">{{currentTimeText}}</span>
     <input id="seekbar" type="range" v-model="currentVideoTime" min="0" :max="videoDuration" :disabled="isSeekbarDisabled">
     <span class="time">{{durationText}}</span>
     <input id="volumebar" type="range" v-model="currentVolume" min="0" max="100">
-    <button @click="clickChapterButton">chapter</button>
+    <button @click="addChapter">chapter</button>
     <ul id="chapterList">
       <li v-for="chapter in chapterList" :key="chapter.time">
         <span @click="selectChapter(chapter)">{{chapter.text}}</span>
@@ -17,66 +17,65 @@
 </template>
 
 <script>
-import {mapState, mapActions} from 'vuex'
+import {mapState, mapGetters, mapActions} from 'vuex'
 
 export default {
   name: 'controller',
   methods: {
-    clickPlayButton () {
-      this.$store.dispatch('Controller/playButtonAction')
-      this.$store.dispatch('Controller/timerAction')
-    },
-    clickChapterButton () {
-      this.$store.dispatch('Controller/chapterButtonAction', {
+    addChapter () {
+      this.$store.dispatch('Controller/addChapter', {
         currentTime: this.currentVideoTime,
         currentTimeText: this.currentTimeText
       })
     },
     selectChapter (chapter) {
-      this.$store.dispatch('Controller/seekBarAction', {
+      this.$store.dispatch('Controller/moveSeekBar', {
         value: chapter.time.toString(10)
       })
     },
     removeChapter (chapter) {
-      this.$store.dispatch('Controller/removeChapterAction', {
+      this.$store.dispatch('Controller/removeChapter', {
         value: chapter
       })
     },
-    ...mapActions('Controller', {
-      clickPauseButton: 'pauseButtonAction'
-    })
+    ...mapActions('Controller', [
+      'playVideo',
+      'pauseVideo'
+    ])
   },
   computed: {
     currentVideoTime: {
       get () {
-        return this.$store.state.currentVideoTime
+        return this.$store.state.Player.currentVideoTime
       },
       set (value) {
-        this.$store.dispatch('Controller/seekBarAction', {
+        this.$store.dispatch('Controller/moveSeekBar', {
           value: value
         })
       }
     },
     currentVolume: {
       get () {
-        return this.$store.state.currentVolume
+        return this.$store.state.Player.currentVolume
       },
       set (value) {
-        this.$store.dispatch('Controller/volumeBarAction', {
+        this.$store.dispatch('Controller/moveVolumeBar', {
           value: value
         })
       }
     },
+    ...mapState('Player', [
+      'videoDuration'
+    ]),
     ...mapState('Controller', [
       'chapterList',
+      'isPlayButtonDisabled',
+      'isPauseButtonDisabled',
       'isSeekbarDisabled'
     ]),
-    ...mapState([
+    ...mapGetters('Player', [
       'currentTimeText',
-      'videoDuration',
-      'durationText',
-      'isPlayButtonDisabled',
-      'isPauseButtonDisabled'
+      'durationText'
     ])
   }
 }

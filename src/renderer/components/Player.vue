@@ -17,24 +17,21 @@ import {mapState, mapActions} from 'vuex'
 export default {
   name: 'player',
   beforeDestroy () {
-    this.$store.dispatch('Player/removeEventAction')
+    this.$store.dispatch('Player/removeEvent')
   },
   methods: {
     ready () {
-      this.$store.dispatch('Player/readyAction', {
+      this.$store.dispatch('Player/initApp', {
         value: this.$refs.youtube.player
       })
     },
-    playing () {
-      this.$store.dispatch('Player/playingAction')
-    },
     cued () {
-      this.$store.dispatch('Player/cuedAction')
-      this.$store.dispatch('Controller/playButtonAction')
-      this.$store.dispatch('Controller/timerAction')
+      this.$store.dispatch('Player/initChapterList')
+      this.$store.dispatch('Controller/playVideo')
     },
     ...mapActions('Player', {
-      end: 'endAction'
+      playing: 'getVideoDuration',
+      end: 'endVideo'
     })
   },
   computed: {
