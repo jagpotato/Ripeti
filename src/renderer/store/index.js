@@ -1,9 +1,23 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import VueYoutube from 'vue-youtube'
+import Datastore from 'nedb'
+import path from 'path'
 
 Vue.use(Vuex)
 Vue.use(VueYoutube)
+
+// const test = {
+//   videoId: 'tpxVMAu1O0Q',
+//   chapterList: [
+//     {time: 50, text: '00:50'}
+//   ]
+// }
+
+const db = new Datastore({
+  filename: path.join(__dirname, 'db', 'chapterList.db'),
+  autoload: true
+})
 
 // const VIDEO_ID = 'tpxVMAu1O0Q'
 // const VIDEO_ID = '4DmWPUhZ8lM'
@@ -38,6 +52,19 @@ const Player = {
       commit('initButton', null, {root: true})
       //
       commit('cueVideo', 'tpxVMAu1O0Q', {root: true})
+    },
+    cuedAction ({commit, state, rootState}) {
+      db.findOne({'videoId': rootState.videoId}, (err, docs) => {
+        if (err) {
+          console.log(err)
+        }
+        if (docs === null) {
+          // dbにvideoIdが存在しない場合，追加
+          db.insert({videoId: rootState.videoId, chapterList: []})
+        }
+        // dbからchapterListを取得
+        commit('Controller/loadChapterList', docs, {root: true})
+      })
     },
     playingAction ({commit, state, rootState}) {
       if (rootState.videoDuration === 0) {
@@ -74,8 +101,8 @@ const Header = {
     searchAction ({commit, state, rootState}) {
       if (state.url !== '') {
         let splitUrl = state.url.match(/v=[0-9a-zA-Z-_]+/)
+        // 動画を右クリック，「動画のURLをコピー」用 /\/[0-9a-zA-Z-_]{11}/
         if (splitUrl !== null) {
-          // 動画を右クリック，「動画のURLをコピー」用 /\/[0-9a-zA-Z-_]{11}/
           let id = splitUrl[0].substr(2)
           commit('cueVideo', id, {root: true})
           commit('initButton', null, {root: true})
@@ -97,7 +124,15 @@ const Controller = {
     isSeekbarDisabled: true
   },
   mutations: {
+    loadChapterList (state, dbData) {
+      if (dbData === null) {
+        state.chapterList = ''
+      } else {
+        state.chapterList = dbData.chapterList
+      }
+    },
     addChapter (state, {currentTime, currentTimeText}) {
+      // ローカルのchapterListを更新
       state.chapterList.push({time: currentTime, text: currentTimeText})
       state.chapterList.sort((a, b) => {
         if (a.time < b.time) {
@@ -107,6 +142,10 @@ const Controller = {
           return 1
         }
       })
+      // dbのchapterListを更新
+    },
+    removeChapter (state, index) {
+      state.chapterList.splice(index, 1)
     },
     enableSeekbar (state) {
       state.isSeekbarDisabled = false
@@ -125,20 +164,20 @@ const Controller = {
       commit('stopTimer', null, {root: true})
       commit('pauseVideo', null, {root: true})
     },
-    chapterButtonAction ({commit, state}, {currentTime, currentTimeText}) {
-      const containsChapter = (chapterList, currentTime) => {
-        for (let i = 0; i < chapterList.length; i++) {
-          if (chapterList[i].time === currentTime) {
-            return true
-          }
-        }
-        return false
-      }
-      if (containsChapter(state.chapterList, currentTime) === false) {
+    chapterButtonAction ({commit, state, getters, rootState}, {currentTime, currentTimeText}) {
+      // chapterListに同じ時間のchapterが含まれていない場合，chapterを追加
+      if (getters.getChapterIndex(currentTime) === -1) {
         commit('addChapter', {currentTime, currentTimeText})
+        db.update({'videoId': rootState.videoId}, {$set: {chapterList: state.chapterList}})
       }
     },
+    removeChapterAction ({commit, state, getters, rootState}, {value}) {
+      const index = getters.getChapterIndex(value.time)
+      commit('removeChapter', index)
+      db.update({'videoId': rootState.videoId}, {$set: {chapterList: state.chapterList}})
+    },
     seekBarAction ({commit, state, rootState}, {value}) {
+      console.log(state.chapterList)
       if (rootState.isPlaying === false) {
         commit('pauseVideo', null, {root: true})
       }
@@ -161,13 +200,25 @@ const Controller = {
       loop()
     }
   },
-  getters: {}
+  getters: {
+    getChapterIndex (state) {
+      return (time) => {
+        for (let i = 0; i < state.chapterList.length; i++) {
+          if (state.chapterList[i].time === time) {
+            return i
+          }
+        }
+        return -1
+      }
+    }
+  }
 }
 
 export default new Vuex.Store({
   state: {
     player: '',
     timer: '',
+    videoId: '',
     currentVideoTime: 0,
     currentTimeText: '00:00',
     videoDuration: 0,
@@ -182,8 +233,9 @@ export default new Vuex.Store({
       state.player = value
     },
     cueVideo (state, id) {
+      state.videoId = id
       state.videoDuration = 0
-      state.player.cueVideoById(id)
+      state.player.cueVideoById(state.videoId)
     },
     playVideo (state) {
       if (state.isPlaying === false) {

@@ -8,7 +8,10 @@
     <input id="volumebar" type="range" v-model="currentVolume" min="0" max="100">
     <button @click="clickChapterButton">chapter</button>
     <ul id="chapterList">
-      <li v-for="chapter in chapterList" :key="chapter.time" @click="selectChapter(chapter)">{{chapter.text}}</li>
+      <li v-for="chapter in chapterList" :key="chapter.time">
+        <span @click="selectChapter(chapter)">{{chapter.text}}</span>
+        <button @click="removeChapter(chapter)">delete</button>
+      </li>
     </ul>
   </div>
 </template>
@@ -32,6 +35,11 @@ export default {
     selectChapter (chapter) {
       this.$store.dispatch('Controller/seekBarAction', {
         value: chapter.time.toString(10)
+      })
+    },
+    removeChapter (chapter) {
+      this.$store.dispatch('Controller/removeChapterAction', {
+        value: chapter
       })
     },
     ...mapActions('Controller', {
