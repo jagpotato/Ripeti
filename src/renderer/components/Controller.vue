@@ -24,7 +24,7 @@ export default {
   methods: {
     clickPlayButton () {
       this.$store.dispatch('Controller/playButtonAction')
-      this.$store.dispatch('Controller/timerAction')
+      this.$store.dispatch('timerAction')
     },
     clickChapterButton () {
       this.$store.dispatch('Controller/chapterButtonAction', {
@@ -49,7 +49,7 @@ export default {
   computed: {
     currentVideoTime: {
       get () {
-        return this.$store.state.currentVideoTime
+        return this.$store.state.Player.currentVideoTime
       },
       set (value) {
         this.$store.dispatch('Controller/seekBarAction', {
@@ -59,7 +59,7 @@ export default {
     },
     currentVolume: {
       get () {
-        return this.$store.state.currentVolume
+        return this.$store.state.Player.currentVolume
       },
       set (value) {
         this.$store.dispatch('Controller/volumeBarAction', {
@@ -67,16 +67,16 @@ export default {
         })
       }
     },
-    ...mapState('Controller', [
-      'chapterList',
-      'isSeekbarDisabled'
-    ]),
-    ...mapState([
+    ...mapState('Player', [
       'currentTimeText',
       'videoDuration',
-      'durationText',
+      'durationText'
+    ]),
+    ...mapState('Controller', [
+      'chapterList',
       'isPlayButtonDisabled',
-      'isPauseButtonDisabled'
+      'isPauseButtonDisabled',
+      'isSeekbarDisabled'
     ])
   }
 }

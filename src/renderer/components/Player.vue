@@ -31,7 +31,7 @@ export default {
     cued () {
       this.$store.dispatch('Player/cuedAction')
       this.$store.dispatch('Controller/playButtonAction')
-      this.$store.dispatch('Controller/timerAction')
+      this.$store.dispatch('timerAction')
     },
     ...mapActions('Player', {
       end: 'endAction'
