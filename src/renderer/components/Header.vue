@@ -8,11 +8,13 @@
 </template>
 
 <script>
+import {mapActions} from 'vuex'
+
 export default {
   methods: {
-    submitUrl () {
-      this.$store.dispatch('Header/searchVideo')
-    }
+    ...mapActions('Header', {
+      submitUrl: 'searchVideo'
+    })
   },
   computed: {
     url: {

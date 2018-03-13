@@ -25,15 +25,12 @@ export default {
         value: this.$refs.youtube.player
       })
     },
-    playing () {
-      this.$store.dispatch('Player/getVideoDuration')
-    },
     cued () {
       this.$store.dispatch('Player/initChapterList')
       this.$store.dispatch('Controller/playVideo')
-      this.$store.dispatch('startTimer')
     },
     ...mapActions('Player', {
+      playing: 'getVideoDuration',
       end: 'endVideo'
     })
   },

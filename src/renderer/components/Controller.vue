@@ -17,15 +17,11 @@
 </template>
 
 <script>
-import {mapState, mapActions} from 'vuex'
+import {mapState, mapGetters, mapActions} from 'vuex'
 
 export default {
   name: 'controller',
   methods: {
-    playVideo () {
-      this.$store.dispatch('Controller/playVideo')
-      this.$store.dispatch('startTimer')
-    },
     addChapter () {
       this.$store.dispatch('Controller/addChapter', {
         currentTime: this.currentVideoTime,
@@ -43,6 +39,7 @@ export default {
       })
     },
     ...mapActions('Controller', [
+      'playVideo',
       'pauseVideo'
     ])
   },
@@ -68,15 +65,17 @@ export default {
       }
     },
     ...mapState('Player', [
-      'currentTimeText',
-      'videoDuration',
-      'durationText'
+      'videoDuration'
     ]),
     ...mapState('Controller', [
       'chapterList',
       'isPlayButtonDisabled',
       'isPauseButtonDisabled',
       'isSeekbarDisabled'
+    ]),
+    ...mapGetters('Player', [
+      'currentTimeText',
+      'durationText'
     ])
   }
 }
