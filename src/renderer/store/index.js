@@ -7,13 +7,6 @@ import path from 'path'
 Vue.use(Vuex)
 Vue.use(VueYoutube)
 
-// const test = {
-//   videoId: 'tpxVMAu1O0Q',
-//   chapterList: [
-//     {time: 50, text: '00:50'}
-//   ]
-// }
-
 const db = new Datastore({
   filename: path.join(__dirname, 'db', 'chapterList.db'),
   autoload: true
@@ -21,6 +14,8 @@ const db = new Datastore({
 
 // const VIDEO_ID = 'tpxVMAu1O0Q'
 // const VIDEO_ID = '4DmWPUhZ8lM'
+// v=4DmWPUhZ8lM
+// https://www.youtube.com/watch?v=9ydA4cXjers
 
 const Player = {
   namespaced: true,
@@ -51,16 +46,16 @@ const Player = {
       state.videoDuration = 0
       state.player.cueVideoById(state.videoId)
     },
-    playVideo (state) {
+    play (state) {
       if (state.isEnd === true) {
         state.isEnd = false
       }
       state.player.playVideo()
     },
-    pauseVideo (state) {
+    pause (state) {
       state.player.pauseVideo()
     },
-    endVideo (state) {
+    setEndFlag (state) {
       state.isEnd = true
     },
     muteVideo (state) {
@@ -103,12 +98,12 @@ const Player = {
     }
   },
   actions: {
-    removeEventAction ({commit, state}) {
+    removeEvent ({commit, state}) {
       window.removeEventListener('resize', function () {
         commit('resize')
       }, false)
     },
-    readyAction ({commit, state}, {value}) {
+    initApp ({commit, state}, {value}) {
       // youtube playerを初期化
       commit('initPlayer', value)
       // resizeイベントを追加
@@ -120,7 +115,7 @@ const Player = {
       //
       commit('cueVideo', 'tpxVMAu1O0Q')
     },
-    cuedAction ({commit, state}) {
+    initChapterList ({commit, state}) {
       db.findOne({'videoId': state.videoId}, (err, docs) => {
         if (err) {
           console.log(err)
@@ -133,7 +128,7 @@ const Player = {
         commit('Controller/loadChapterList', docs, {root: true})
       })
     },
-    playingAction ({commit, state}) {
+    getVideoDuration ({commit, state}) {
       if (state.videoDuration === 0) {
         // 動画時間の取得
         state.player.getDuration().then((value) => {
@@ -144,8 +139,8 @@ const Player = {
         })
       }
     },
-    endAction ({commit, state}) {
-      commit('endVideo')
+    endVideo ({commit, state}) {
+      commit('setEndFlag')
       commit('Controller/initButton', null, {root: true})
       commit('stopTimer', null, {root: true})
     }
@@ -166,7 +161,7 @@ const Header = {
     }
   },
   actions: {
-    searchAction ({commit, state}) {
+    searchVideo ({commit, state}) {
       if (state.url !== '') {
         let splitUrl = state.url.match(/v=[0-9a-zA-Z-_]+/)
         // 動画を右クリック，「動画のURLをコピー」用 /\/[0-9a-zA-Z-_]{11}/
@@ -178,7 +173,7 @@ const Header = {
         commit('initUrl')
       }
     },
-    urlAction ({commit, state}, {url}) {
+    inputUrl ({commit, state}, {url}) {
       commit('updateUrl', url)
     }
   },
@@ -204,12 +199,14 @@ const Controller = {
     },
     loadChapterList (state, dbData) {
       if (dbData === null) {
-        state.chapterList = ''
+        state.chapterList = []
       } else {
         state.chapterList = dbData.chapterList
       }
     },
     addChapter (state, {currentTime, currentTimeText}) {
+      // console.log(state.chapterList)
+      // console.log(currentTime, currentTimeText)
       // ローカルのchapterListを更新
       state.chapterList.push({time: currentTime, text: currentTimeText})
       state.chapterList.sort((a, b) => {
@@ -220,7 +217,6 @@ const Controller = {
           return 1
         }
       })
-      // dbのchapterListを更新
     },
     removeChapter (state, index) {
       state.chapterList.splice(index, 1)
@@ -230,38 +226,38 @@ const Controller = {
     }
   },
   actions: {
-    playButtonAction ({commit, state}) {
+    playVideo ({commit, state}) {
       commit('toggleButton')
       if (state.isSeekbarDisabled === true) {
         commit('enableSeekbar')
       }
-      commit('Player/playVideo', null, {root: true})
+      commit('Player/play', null, {root: true})
     },
-    pauseButtonAction ({commit, state}) {
+    pauseVideo ({commit, state}) {
       commit('toggleButton')
       commit('stopTimer', null, {root: true})
-      commit('Player/pauseVideo', null, {root: true})
+      commit('Player/pause', null, {root: true})
     },
-    chapterButtonAction ({commit, state, getters, rootState}, {currentTime, currentTimeText}) {
+    addChapter ({commit, state, getters, rootState}, {currentTime, currentTimeText}) {
       // chapterListに同じ時間のchapterが含まれていない場合，chapterを追加
       if (getters.getChapterIndex(currentTime) === -1) {
         commit('addChapter', {currentTime, currentTimeText})
         db.update({'videoId': rootState.Player.videoId}, {$set: {chapterList: state.chapterList}})
       }
     },
-    removeChapterAction ({commit, state, getters, rootState}, {value}) {
+    removeChapter ({commit, state, getters, rootState}, {value}) {
       const index = getters.getChapterIndex(value.time)
       commit('removeChapter', index)
       db.update({'videoId': rootState.Player.videoId}, {$set: {chapterList: state.chapterList}})
     },
-    seekBarAction ({commit, state, rootState}, {value}) {
+    moveSeekBar ({commit, state, rootState}, {value}) {
       if (rootState.Player.isEnd === true) {
-        commit('Player/pauseVideo', null, {root: true})
+        commit('Player/pause', null, {root: true})
       }
       commit('Player/updateCurrentVideoTime', parseInt(value, 10), {root: true})
       commit('Player/seekVideo', null, {root: true})
     },
-    volumeBarAction ({commit, state}, {value}) {
+    moveVolumeBar ({commit, state}, {value}) {
       commit('Player/unMuteVideo', null, {root: true})
       commit('Player/setVolume', parseInt(value, 10), {root: true})
     }
@@ -293,7 +289,7 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    timerAction ({commit, state}) {
+    startTimer ({commit, state}) {
       let loop = () => {
         state.Player.player.getCurrentTime().then((value) => {
           commit('Player/updateCurrentVideoTime', value)
