@@ -53,7 +53,7 @@ const Player = {
       //
       commit('cueVideo', 'tpxVMAu1O0Q', {root: true})
     },
-    playingAction ({commit, state, rootState}) {
+    cuedAction ({commit, state, rootState}) {
       db.findOne({'videoId': rootState.videoId}, (err, docs) => {
         if (err) {
           console.log(err)
@@ -65,6 +65,8 @@ const Player = {
         // dbからchapterListを取得
         commit('Controller/loadChapterList', docs, {root: true})
       })
+    },
+    playingAction ({commit, state, rootState}) {
       if (rootState.videoDuration === 0) {
         // 動画時間の取得
         rootState.player.getDuration().then((value) => {
@@ -142,6 +144,9 @@ const Controller = {
       })
       // dbのchapterListを更新
     },
+    removeChapter (state, index) {
+      state.chapterList.splice(index, 1)
+    },
     enableSeekbar (state) {
       state.isSeekbarDisabled = false
     }
@@ -159,22 +164,20 @@ const Controller = {
       commit('stopTimer', null, {root: true})
       commit('pauseVideo', null, {root: true})
     },
-    chapterButtonAction ({commit, state, rootState}, {currentTime, currentTimeText}) {
-      const containsChapter = (chapterList, currentTime) => {
-        for (let i = 0; i < chapterList.length; i++) {
-          if (chapterList[i].time === currentTime) {
-            return true
-          }
-        }
-        return false
-      }
+    chapterButtonAction ({commit, state, getters, rootState}, {currentTime, currentTimeText}) {
       // chapterListに同じ時間のchapterが含まれていない場合，chapterを追加
-      if (containsChapter(state.chapterList, currentTime) === false) {
+      if (getters.getChapterIndex(currentTime) === -1) {
         commit('addChapter', {currentTime, currentTimeText})
         db.update({'videoId': rootState.videoId}, {$set: {chapterList: state.chapterList}})
       }
     },
+    removeChapterAction ({commit, state, getters, rootState}, {value}) {
+      const index = getters.getChapterIndex(value.time)
+      commit('removeChapter', index)
+      db.update({'videoId': rootState.videoId}, {$set: {chapterList: state.chapterList}})
+    },
     seekBarAction ({commit, state, rootState}, {value}) {
+      console.log(state.chapterList)
       if (rootState.isPlaying === false) {
         commit('pauseVideo', null, {root: true})
       }
@@ -197,7 +200,18 @@ const Controller = {
       loop()
     }
   },
-  getters: {}
+  getters: {
+    getChapterIndex (state) {
+      return (time) => {
+        for (let i = 0; i < state.chapterList.length; i++) {
+          if (state.chapterList[i].time === time) {
+            return i
+          }
+        }
+        return -1
+      }
+    }
+  }
 }
 
 export default new Vuex.Store({

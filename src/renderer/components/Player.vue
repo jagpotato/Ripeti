@@ -29,6 +29,7 @@ export default {
       this.$store.dispatch('Player/playingAction')
     },
     cued () {
+      this.$store.dispatch('Player/cuedAction')
       this.$store.dispatch('Controller/playButtonAction')
       this.$store.dispatch('Controller/timerAction')
     },
