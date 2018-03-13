@@ -36,20 +36,25 @@ const Player = {
     isEnd: false
   },
   getters: {
-    getMinutesText (state) {
+    getHours (state) {
       return (time) => {
-        return ('0' + (Math.floor(time / 60) % 60)).substr(-2)
+        return Math.floor(time / 60 / 60)
       }
     },
-    getSecondsText (state) {
+    getMinutes (state) {
       return (time) => {
-        return ('0' + Math.floor(time % 60)).substr(-2)
+        return Math.floor(time / 60) % 60
+      }
+    },
+    getSeconds (state) {
+      return (time) => {
+        return Math.floor(time % 60)
       }
     },
     durationText (state, getters) {
-      const hours = Math.floor(state.videoDuration / 60 / 60)
-      const minutes = getters.getMinutesText(state.videoDuration)
-      const seconds = getters.getSecondsText(state.videoDuration)
+      const hours = getters.getHours(state.videoDuration)
+      const minutes = ('0' + getters.getMinutes(state.videoDuration)).substr(-2)
+      const seconds = ('0' + getters.getSeconds(state.videoDuration)).substr(-2)
       let text = minutes + ':' + seconds
       if (hours > 0) {
         text = ('0' + hours).substr(-2) + ':' + text
@@ -57,12 +62,12 @@ const Player = {
       return text
     },
     currentTimeText (state, getters) {
-      const minutes = getters.getMinutesText(state.currentVideoTime)
-      const seconds = getters.getSecondsText(state.currentVideoTime)
-      const durationHours = Math.floor(state.videoDuration / 60 / 60)
+      const minutes = ('0' + getters.getMinutes(state.currentVideoTime)).substr(-2)
+      const seconds = ('0' + getters.getSeconds(state.currentVideoTime)).substr(-2)
+      const durationHours = getters.getHours(state.videoDuration)
       let text
       if (durationHours > 0) {
-        let hours = ('0' + Math.floor(state.currentVideoTime / 60 / 60)).substr(-2)
+        let hours = ('0' + getters.getHours(state.currentVideoTime)).substr(-2)
         text = hours + ':' + minutes + ':' + seconds
       } else {
         text = minutes + ':' + seconds
