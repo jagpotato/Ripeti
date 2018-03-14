@@ -40,6 +40,7 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 #header {
+  background-color: rgba(0, 255, 0, 0.3);
   position: absolute;
   top: 0px;
   left: 0px;
