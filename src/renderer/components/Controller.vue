@@ -1,18 +1,20 @@
 <template>
-  <div id="controller">
-    <button @click="playVideo" :disabled="isPlayButtonDisabled">play</button>
-    <button @click="pauseVideo" :disabled="isPauseButtonDisabled">pause</button>
-    <span class="time">{{currentTimeText}}</span>
-    <input id="seekbar" type="range" v-model="currentVideoTime" min="0" :max="videoDuration" :disabled="isSeekbarDisabled">
-    <span class="time">{{durationText}}</span>
-    <input id="volumebar" type="range" v-model="currentVolume" min="0" max="100">
-    <button @click="addChapter">chapter</button>
-    <ul id="chapterList">
-      <li v-for="chapter in chapterList" :key="chapter.time">
-        <span @click="selectChapter(chapter)">{{chapter.text}}</span>
-        <button @click="removeChapter(chapter)">delete</button>
-      </li>
-    </ul>
+  <div id="footer">
+    <div id="controller">
+      <button @click="playVideo" :disabled="isPlayButtonDisabled">play</button>
+      <button @click="pauseVideo" :disabled="isPauseButtonDisabled">pause</button>
+      <span class="time">{{currentTimeText}}</span>
+      <input id="seekbar" type="range" v-model="currentVideoTime" min="0" :max="videoDuration" :disabled="isSeekbarDisabled">
+      <span class="time">{{durationText}}</span>
+      <input id="volumebar" type="range" v-model="currentVolume" min="0" max="100">
+      <button @click="addChapter">chapter</button>
+      <ul id="chapterList">
+        <li v-for="chapter in chapterList" :key="chapter.time">
+          <span @click="selectChapter(chapter)">{{chapter.text}}</span>
+          <button @click="removeChapter(chapter)">delete</button>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -83,12 +85,26 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-#controller {
+#footer {
+  background-color: rgba(0, 0, 255, 0.3);
+  /* footerを画面下に配置 */
   position: absolute;
   bottom: 0px;
   left: 0px;
   z-index: 1;
+  /* widthをスクリーンに合わせる */
+  width: 100vw;
+  /* electronのドラッグ領域から外す */
   -webkit-app-region: no-drag;
+}
+#controller {
+  background-color: rgba(0, 255, 255, 0.3);
+  /* 子要素のボタンなどを中央配置 */
+  text-align: center;
+  /* controllerを中央配置(width指定時) */
+  margin: auto;
+  /* controllerのwidth */
+  /* width: 90vw; */
 }
 .time {
   color: white;
