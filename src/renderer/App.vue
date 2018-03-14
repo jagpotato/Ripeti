@@ -14,5 +14,6 @@
   body {
     margin: 0;
     overflow: hidden;
+    -webkit-app-region: drag;
   }
 </style>

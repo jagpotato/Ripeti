@@ -88,6 +88,7 @@ export default {
   bottom: 0px;
   left: 0px;
   z-index: 1;
+  -webkit-app-region: no-drag;
 }
 .time {
   color: white;

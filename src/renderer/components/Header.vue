@@ -4,6 +4,9 @@
       <input type="url" v-model="url">
       <button id="searchButton" @click="submitUrl">search</button>
     </div>
+    <div>
+      <button @click="closeWindow">close</button>
+    </div>
   </div>
 </template>
 
@@ -14,7 +17,10 @@ export default {
   methods: {
     ...mapActions('Header', {
       submitUrl: 'searchVideo'
-    })
+    }),
+    closeWindow () {
+      window.close()
+    }
   },
   computed: {
     url: {
@@ -38,5 +44,6 @@ export default {
   top: 0px;
   left: 0px;
   z-index: 1;
+  -webkit-app-region: no-drag;
 }
 </style>
