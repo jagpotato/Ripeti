@@ -32,8 +32,13 @@ const Player = {
     },
     currentVideoTime: 0,
     videoDuration: 0,
-    currentVolume: 0,
-    isEnd: false
+    currentVolume: 50,
+    isEnd: false,
+    isPlaying: false,
+    isMute: false,
+    isChapterDisplayed: false,
+    seekBarBackground: '',
+    volumeBarBackground: ''
   },
   getters: {
     getHours (state) {
@@ -88,20 +93,31 @@ const Player = {
       if (state.isEnd === true) {
         state.isEnd = false
       }
+      state.isPlaying = true
       state.player.playVideo()
     },
     pauseVideo (state) {
+      state.isPlaying = false
       state.player.pauseVideo()
     },
     setEndFlag (state) {
+      state.isPlaying = false
       state.isEnd = true
     },
-    muteVideo (state) {
-      state.player.mute()
+    toggleMute (state) {
+      state.isMute = !state.isMute
+      if (state.isMute === true) {
+        state.player.mute()
+      } else {
+        state.player.unMute()
+      }
     },
     setVolume (state, value) {
+      state.isMute = false
       state.player.unMute()
       state.currentVolume = value
+      const point = state.currentVolume / 100
+      state.volumeBarBackground = '-webkit-gradient(linear, left top, right top, ' + 'color-stop(' + point + ', #ffffff), ' + 'color-stop(' + point + ', #555555))'
       state.player.setVolume(state.currentVolume)
     },
     resize (state) {
@@ -111,10 +127,18 @@ const Player = {
       state.player.seekTo(state.currentVideoTime, true)
     },
     setDuration (state, value) {
-      state.videoDuration = value
+      state.videoDuration = Math.round(value)
     },
     updateCurrentVideoTime (state, value) {
-      state.currentVideoTime = Math.floor(value)
+      state.currentVideoTime = Math.ceil(value)
+      let point = state.currentVideoTime / state.videoDuration
+      if (point < 0.2) {
+        point += 0.01
+      }
+      state.seekBarBackground = '-webkit-gradient(linear, left top, right top, ' + 'color-stop(' + point + ', #f44336), ' + 'color-stop(' + point + ', #ffffff))'
+    },
+    toggleChapterList (state) {
+      state.isChapterDisplayed = !state.isChapterDisplayed
     }
   },
   actions: {
@@ -132,6 +156,7 @@ const Player = {
       }, false)
       // play，pauseボタンの初期化
       commit('Controller/initButton', null, {root: true})
+      commit('setVolume', state.currentVolume)
       //
       commit('cueVideo', 'tpxVMAu1O0Q')
     },
@@ -153,7 +178,7 @@ const Player = {
         // 動画時間の取得
         state.player.getDuration().then((value) => {
           commit('setDuration', value)
-          commit('muteVideo')
+          commit('toggleMute')
         }).catch(() => {
           console.log('error')
         })
@@ -311,6 +336,12 @@ const Controller = {
     },
     moveVolumeBar ({commit, state}, {value}) {
       commit('Player/setVolume', parseInt(value, 10), {root: true})
+    },
+    toggleMute ({commit, state}) {
+      commit('Player/toggleMute', null, {root: true})
+    },
+    openChapterList ({commit, state}) {
+      commit('Player/toggleChapterList', null, {root: true})
     }
   }
 }

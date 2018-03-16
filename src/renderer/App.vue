@@ -11,10 +11,10 @@
 </script>
 
 <style>
-  body {
-    position: relative;
-    margin: 0;
-    overflow: hidden;
-    -webkit-app-region: drag;
-  }
+body {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  /* -webkit-app-region: drag; */
+}
 </style>

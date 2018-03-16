@@ -1,12 +1,11 @@
 <template>
   <div id="header">
+    <button id="menu-button"><i class="mdi mdi-menu mdi-light mdi-24px"></i></button>
     <div id="search">
       <input type="url" v-model="url">
-      <button id="searchButton" @click="submitUrl">search</button>
+      <button id="search-button" @click="submitUrl"><i class="mdi mdi-magnify mdi-light mdi-24px"></i></button>
     </div>
-    <div>
-      <button @click="closeWindow">close</button>
-    </div>
+    <button id="close-button" @click="closeWindow"><i class="mdi mdi-close mdi-light mdi-24px"></i></button>
   </div>
 </template>
 
@@ -40,11 +39,31 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 #header {
-  background-color: rgba(0, 255, 0, 0.3);
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  z-index: 1;
-  -webkit-app-region: no-drag;
+  background-color: rgba(0, 255, 0, 0.2);
+  width: 100vw;
+  height: 40px;
+  display: flex;
+  justify-content: space-between;
+}
+#search {
+  display: flex;
+}
+input[type="url"] {
+  outline: none;
+  border: none;
+  width: 400px;
+  background-color: rgba(30, 30, 30, 0.6);
+}
+button {
+  background-color: transparent;
+  border: none;
+  outline: none;
+}
+button:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+#menu-button {}
+#search-button {
+  background-color: rgba(30, 30, 30, 0.6);
 }
 </style>
