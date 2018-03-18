@@ -184,6 +184,12 @@ const Player = {
         })
       }
     },
+    closeChapterList ({commit, state}, {event}) {
+      const ignoreId = ['chapter-button', 'chapter-remove-icon', 'chapter-add-icon', 'chapter-list-icon', 'chapter-list']
+      if (ignoreId.indexOf(event.target.id) < 0 && state.isChapterDisplayed === true) {
+        commit('toggleChapterList')
+      }
+    },
     endVideo ({commit, state}) {
       commit('setEndFlag')
       commit('Controller/initButton', null, {root: true})
@@ -345,7 +351,6 @@ const Controller = {
     }
   }
 }
-
 export default new Vuex.Store({
   state: {},
   getters: {},

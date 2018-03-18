@@ -20,8 +20,8 @@
         </div>
         <div id="control-item-right">
           <div id="chapter">
-            <button id="add-chapter-button" @click="addChapter"><i class="mdi mdi-clock mdi-light mdi-24px"></i></button>
-            <button id="chapter-list-button" @click="openChapterList"><i class="mdi mdi-menu-up mdi-light mdi-24px"></i></button>
+            <button id="chapter-add-button" @click="addChapter"><i id="chapter-add-icon" class="mdi mdi-clock mdi-light mdi-24px"></i></button>
+            <button id="chapter-list-button" @click="openChapterList"><i id="chapter-list-icon" class="mdi mdi-menu-up mdi-light mdi-24px"></i></button>
           </div>
         </div>
       </div>
@@ -111,6 +111,8 @@ export default {
   justify-content: space-between;
 }
 #time > span {
+  margin-left: auto;
+  margin-right: auto;
   color: rgba(255, 255, 255, 1.0);
 }
 #seek-bar {
@@ -127,29 +129,25 @@ export default {
   justify-content: space-around;
 }
 #play-button, #pause-button {
+  cursor: pointer;
   background-color: transparent;
   outline: none;
-  border: 1px solid #000000;
+  border: none;
   padding: 0;
   width: 30px;
   height: 30px;
-}
-#play-button:hover, #pause-button:hover {
-  background-color: rgba(255, 255, 255, 0.3);
 }
 #volume {
   display: flex;
   align-items: center;
 }
 #mute-button {
+  cursor: pointer;
   background-color: transparent;
   border: none;
   outline: none;
   display: flex;
   align-items: center;
-}
-#mute-button:hover {
-  background-color: rgba(255, 255, 255, 0.3);
 }
 #volume-bar {
   display: flex;
@@ -168,15 +166,13 @@ export default {
 #chapter > button {
   padding: 0;
 }
-#add-chapter-button, #chapter-list-button {
+#chapter-add-button, #chapter-list-button {
+  cursor: pointer;
   background-color: transparent;
   border: none;
   outline: none;
   display: flex;
   align-items: center;
-}
-#add-chapter-button:hover, #chapter-list-button:hover {
-  background-color: rgba(255, 255, 255, 0.3);
 }
 #seek-bar {
   outline: 0;
@@ -185,6 +181,8 @@ export default {
   appearance: none;
   border-radius: 50px;
   height: 6px;
+  margin-top: auto;
+  margin-bottom: auto;
   background-image: -webkit-gradient(linear, left top, right top, color-stop(0.01, #f44336), color-stop(0.01, #ffffff));
 }
 #seek-bar::-webkit-slider-thumb {
@@ -192,8 +190,8 @@ export default {
   -moz-appearance: none;
   appearance: none;
   background-color: #f44336;
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
 }
 #volume-bar {
@@ -210,8 +208,11 @@ export default {
   -moz-appearance: none;
   appearance: none;
   background-color: #ffffff;
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
+}
+input[type="range"]:hover {
+  cursor: pointer;
 }
 </style>

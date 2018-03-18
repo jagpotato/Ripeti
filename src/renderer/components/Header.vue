@@ -55,6 +55,7 @@ input[type="url"] {
   background-color: rgba(30, 30, 30, 0.6);
 }
 button {
+  cursor: pointer;
   background-color: transparent;
   border: none;
   outline: none;
