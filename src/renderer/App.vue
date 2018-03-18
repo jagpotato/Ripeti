@@ -14,7 +14,7 @@
 body {
   position: relative;
   margin: 0;
-  overflow: hidden;
+  /* overflow: hidden; */
   /* -webkit-app-region: drag; */
 }
 </style>

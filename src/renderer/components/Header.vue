@@ -1,6 +1,6 @@
 <template>
   <div id="header">
-    <button id="menu-button"><i class="mdi mdi-menu mdi-light mdi-24px"></i></button>
+    <button id="menu-button" @click="openMenu"><i class="mdi mdi-menu mdi-light mdi-24px"></i></button>
     <div id="search">
       <input type="url" v-model="url">
       <button id="search-button" @click="submitUrl"><i class="mdi mdi-magnify mdi-light mdi-24px"></i></button>
@@ -15,7 +15,8 @@ import {mapActions} from 'vuex'
 export default {
   methods: {
     ...mapActions('Header', {
-      submitUrl: 'searchVideo'
+      submitUrl: 'searchVideo',
+      openMenu: 'openMenu'
     }),
     closeWindow () {
       window.close()

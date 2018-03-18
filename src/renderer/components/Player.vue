@@ -15,12 +15,14 @@
       </div>
       <Controller></Controller>
     </div>
+    <Menu></Menu>
   </div>
 </template>
 
 <script>
 import Header from '@/components/Header'
 import Controller from '@/components/Controller'
+import Menu from '@/components/Menu'
 import {mapState, mapActions} from 'vuex'
 
 export default {
@@ -71,7 +73,8 @@ export default {
   },
   components: {
     Header,
-    Controller
+    Controller,
+    Menu
   }
 }
 </script>

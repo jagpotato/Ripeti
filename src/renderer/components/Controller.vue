@@ -8,8 +8,10 @@
       </div>
       <div id="control-item">
         <div id="control-item-left">
-          <button id="pause-button" @click="pauseVideo" v-if="isPlaying" :disabled="isPauseButtonDisabled"><i class="mdi mdi-pause mdi-light mdi-24px"></i></button>
-          <button id="play-button" @click="playVideo" v-else :disabled="isPlayButtonDisabled"><i class="mdi mdi-play mdi-light mdi-24px"></i></button>
+          <transition name="play-button" mode="out-in">
+            <button key="pause" id="pause-button" @click="pauseVideo" v-if="isPlaying" :disabled="isPauseButtonDisabled"><i class="mdi mdi-pause mdi-light mdi-24px"></i></button>
+            <button key="play" id="play-button" @click="playVideo" v-else :disabled="isPlayButtonDisabled"><i class="mdi mdi-play mdi-light mdi-24px"></i></button>
+          </transition>
           <div id="volume">
             <button id="mute-button" @click="toggleMute">
               <i class="mdi mdi-volume-off mdi-light mdi-24px" v-if="isMute"></i>
@@ -136,6 +138,12 @@ export default {
   padding: 0;
   width: 30px;
   height: 30px;
+}
+.play-button-enter-active, .play-button-leave-active {
+  transition: opacity 0.1s;
+}
+.play-button-enter, .play-button-leave-to {
+  opacity: 0.5;
 }
 #volume {
   display: flex;

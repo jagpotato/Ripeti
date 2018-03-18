@@ -227,6 +227,9 @@ const Header = {
     },
     inputUrl ({commit, state}, {url}) {
       commit('updateUrl', url)
+    },
+    openMenu ({commit, state}) {
+      commit('Menu/toggleMenu', null, {root: true})
     }
   }
 }
@@ -351,6 +354,27 @@ const Controller = {
     }
   }
 }
+
+const Menu = {
+  namespaced: true,
+  state: {
+    isMenuDisplayed: false
+  },
+  getters: {},
+  mutations: {
+    toggleMenu (state) {
+      state.isMenuDisplayed = !state.isMenuDisplayed
+    }
+  },
+  actions: {
+    closeMenu ({commit, state}) {
+      if (state.isMenuDisplayed === true) {
+        commit('toggleMenu')
+      }
+    }
+  }
+}
+
 export default new Vuex.Store({
   state: {},
   getters: {},
@@ -359,7 +383,8 @@ export default new Vuex.Store({
   modules: {
     Player,
     Header,
-    Controller
+    Controller,
+    Menu
   },
   strict: process.env.NODE_ENV !== 'production'
 })
