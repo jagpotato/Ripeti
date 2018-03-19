@@ -37,6 +37,7 @@ const Player = {
     isPlaying: false,
     isMute: false,
     isChapterDisplayed: false,
+    controllerOpacity: 0,
     seekBarBackground: '',
     volumeBarBackground: ''
   },
@@ -117,7 +118,7 @@ const Player = {
       state.player.unMute()
       state.currentVolume = value
       const point = state.currentVolume / 100
-      state.volumeBarBackground = '-webkit-gradient(linear, left top, right top, ' + 'color-stop(' + point + ', #ffffff), ' + 'color-stop(' + point + ', #555555))'
+      state.volumeBarBackground = '-webkit-gradient(linear, left top, right top, ' + 'color-stop(' + point + ', #ffffff), ' + 'color-stop(' + point + ', #707070))'
       state.player.setVolume(state.currentVolume)
     },
     resize (state) {
@@ -135,10 +136,13 @@ const Player = {
       if (point < 0.2) {
         point += 0.01
       }
-      state.seekBarBackground = '-webkit-gradient(linear, left top, right top, ' + 'color-stop(' + point + ', #f44336), ' + 'color-stop(' + point + ', #ffffff))'
+      state.seekBarBackground = '-webkit-gradient(linear, left top, right top, ' + 'color-stop(' + point + ', #f44336), ' + 'color-stop(' + point + ', #707070))'
     },
-    toggleChapterList (state) {
+    toggleChapterListDisplay (state) {
       state.isChapterDisplayed = !state.isChapterDisplayed
+    },
+    setControllerOpacity (state, opacity) {
+      state.controllerOpacity = opacity
     }
   },
   actions: {
@@ -184,10 +188,15 @@ const Player = {
         })
       }
     },
-    closeChapterList ({commit, state}, {event}) {
-      const ignoreId = ['chapter-button', 'chapter-remove-icon', 'chapter-add-icon', 'chapter-list-icon', 'chapter-list']
-      if (ignoreId.indexOf(event.target.id) < 0 && state.isChapterDisplayed === true) {
-        commit('toggleChapterList')
+    toggleControllerOpacity ({commit, state}, {event}) {
+      switch (event.type) {
+        case 'mouseenter':
+          commit('setControllerOpacity', 1)
+          break
+        case 'mouseleave':
+          commit('setControllerOpacity', 0)
+          break
+        default: break
       }
     },
     endVideo ({commit, state}) {
@@ -350,7 +359,7 @@ const Controller = {
       commit('Player/toggleMute', null, {root: true})
     },
     openChapterList ({commit, state}) {
-      commit('Player/toggleChapterList', null, {root: true})
+      commit('Player/toggleChapterListDisplay', null, {root: true})
     }
   }
 }

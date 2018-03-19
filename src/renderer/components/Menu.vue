@@ -33,6 +33,7 @@ export default {
   height: 100vh;
   background-color: rgba(0, 0, 0, 0.7);
   transition-duration: 1s;
+  -webkit-app-region: no-drag;
 }
 #menu-list {
   position: absolute;
@@ -41,7 +42,8 @@ export default {
   z-index: 2;
   width: 30%;
   height: 100vh;
-  background-color: pink;
+  background-color: rgba(42, 42, 42, 1.0);
+  -webkit-app-region: no-drag;
 }
 .menu-stage-enter-active, .menu-stage-leave-active {
   transition: all 0.3s;

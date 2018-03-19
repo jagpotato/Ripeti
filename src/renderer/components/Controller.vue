@@ -1,5 +1,5 @@
 <template>
-  <div id="footer">
+  <div id="footer" @mouseenter="toggleControllerOpacity" @mouseleave="toggleControllerOpacity" :style="{opacity: controllerOpacity}">
     <div id="controller">
       <div id="time">
         <span>{{currentTimeText}}</span>
@@ -43,6 +43,11 @@ export default {
         currentTimeText: this.currentTimeText
       })
     },
+    toggleControllerOpacity (event) {
+      this.$store.dispatch('Player/toggleControllerOpacity', {
+        event: event
+      })
+    },
     ...mapActions('Controller', [
       'playVideo',
       'pauseVideo',
@@ -75,6 +80,7 @@ export default {
       'videoDuration',
       'isPlaying',
       'isMute',
+      'controllerOpacity',
       'seekBarBackground',
       'volumeBarBackground'
     ]),
@@ -94,15 +100,25 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 #footer {
-  background-color: rgba(0, 0, 255, 0.5);
+  /* background-color: rgba(0, 0, 255, 0.5); */
   width: 100vw;
-  height: 80px;
+  height: 40%;
+  max-height: 90px;
   display: flex;
   justify-content: center;
+  -webkit-app-region: no-drag;
+  /* opacity: 0; */
+}
+#footer:hover {
+  /* opacity: 1; */
 }
 #controller {
-  background-color: rgba(255, 0, 255, 0.5);
+  /* background-color: rgba(255, 0, 255, 0.5); */
+  background-color: rgba(30, 30, 30, 0.8);
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   width: 90vw;
+  margin-bottom: 5px;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
@@ -191,7 +207,7 @@ export default {
   height: 6px;
   margin-top: auto;
   margin-bottom: auto;
-  background-image: -webkit-gradient(linear, left top, right top, color-stop(0.01, #f44336), color-stop(0.01, #ffffff));
+  background-image: -webkit-gradient(linear, left top, right top, color-stop(0.01, #f44336), color-stop(0.01, #707070));
 }
 #seek-bar::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -209,7 +225,7 @@ export default {
   appearance: none;
   border-radius: 50px;
   height: 6px;
-  /* background-image: -webkit-gradient(linear, left top, right top, color-stop(0.01, #ffffff), color-stop(0.01, #555555)); */
+  /* background-image: -webkit-gradient(linear, left top, right top, color-stop(0.01, #ffffff), color-stop(0.01, #707070)); */
 }
 #volume-bar::-webkit-slider-thumb {
   -webkit-appearance: none;

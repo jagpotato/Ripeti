@@ -1,12 +1,12 @@
 <template>
-  <div id="player" @click="closeChapterList">
+  <div id="player">
     <div id="youtube">
-      <youtube :height="height" :width="width" :player-vars="playerVars" ref="youtube" @ready="ready" @playing="playing" @cued="cued" @ended="end"></youtube>
+      <youtube :height="height" :width="width" :player-vars="playerVars" ref="youtube" @ready="ready" @playing="getVideoDuration" @cued="cued" @ended="endVideo"></youtube>
     </div>
     <div id="cover">
       <Header></Header>
       <div id="content">
-        <ul id="chapter-list" v-show="isChapterDisplayed">
+        <ul id="chapter-list" v-show="isChapterDisplayed" @mouseenter="toggleControllerOpacity" @mouseleave="toggleControllerOpacity" :style="{opacity: controllerOpacity}">
           <li v-for="chapter in chapterList" :key="chapter.time">
             <button id="chapter-button" @click="selectChapter(chapter)">{{chapter.text}}</button>
             <button id="chapter-remove-button" @click="removeChapter(chapter)"><i id="chapter-remove-icon" class="mdi mdi-minus mdi-light mdi-18px"></i></button>
@@ -50,22 +50,24 @@ export default {
         value: chapter
       })
     },
-    closeChapterList (event) {
-      this.$store.dispatch('Player/closeChapterList', {
+    toggleControllerOpacity (event) {
+      this.$store.dispatch('Player/toggleControllerOpacity', {
         event: event
       })
     },
-    ...mapActions('Player', {
-      playing: 'getVideoDuration',
-      end: 'endVideo'
-    })
+    ...mapActions('Player', [
+      'getVideoDuration',
+      'endVideo'
+    ])
   },
   computed: {
     ...mapState('Player', [
       'height',
       'width',
       'playerVars',
-      'isChapterDisplayed'
+      'isControllerDisplayed',
+      'isChapterDisplayed',
+      'controllerOpacity'
     ]),
     ...mapState('Controller', [
       'chapterList'
@@ -97,18 +99,27 @@ export default {
   height: 100vh;
 }
 #content {
+  /* background-color: rgba(255, 255, 0, 0.3); */
   display: flex;
   justify-content: flex-end;
-  margin-top: auto;
-  width: 95vw;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100vw;
+  height: 100%;
+  -webkit-app-region: drag;
 }
 #chapter-list {
   width: 120px;
   height: 120px;
   list-style: none;
-  background-color: rgba(30, 30, 30, 0.9);
+  background-color: rgba(30, 30, 30, 0.8);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  margin-top: auto;
+  margin-bottom: 0;
+  margin-right: 5vw;
   padding: 0;
   overflow: auto;
+  -webkit-app-region: no-drag;
 }
 #chapter-list > li {
   text-align: center;
@@ -118,7 +129,6 @@ export default {
 ::-webkit-scrollbar {
   width: 5px;
 }
-::-webkit-scrollbar-track {}
 ::-webkit-scrollbar-thumb {
   background-color: rgba(150, 150, 150, 1.0);
   border-radius: 10px;
