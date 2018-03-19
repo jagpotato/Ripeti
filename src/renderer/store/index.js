@@ -12,11 +12,6 @@ const db = new Datastore({
   autoload: true
 })
 
-// const VIDEO_ID = 'tpxVMAu1O0Q'
-// const VIDEO_ID = '4DmWPUhZ8lM'
-// v=4DmWPUhZ8lM
-// https://www.youtube.com/watch?v=9ydA4cXjers
-
 const Player = {
   namespaced: true,
   state: {
@@ -161,8 +156,6 @@ const Player = {
       // play，pauseボタンの初期化
       commit('Controller/initButton', null, {root: true})
       commit('setVolume', state.currentVolume)
-      //
-      commit('cueVideo', 'tpxVMAu1O0Q')
     },
     initChapterList ({commit, state}) {
       db.findOne({'videoId': state.videoId}, (err, docs) => {
@@ -182,7 +175,6 @@ const Player = {
         // 動画時間の取得
         state.player.getDuration().then((value) => {
           commit('setDuration', value)
-          commit('toggleMute')
         }).catch(() => {
           console.log('error')
         })
