@@ -1,9 +1,9 @@
 {
-  "name": "chap-tube",
-  "productName": "ChapTube",
-  "version": "0.0.0",
+  "name": "ripeti",
+  "productName": "Ripeti",
+  "version": "0.0.1",
   "author": "jagpotato",
-  "description": "An electron-vue project",
+  "description": "チャプターを設定できるYouTubeプレイヤー",
   "license": "MIT",
   "main": "./dist/electron/main.js",
   "scripts": {

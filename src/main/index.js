@@ -21,9 +21,9 @@ function createWindow () {
    */
   mainWindow = new BrowserWindow({
     frame: false,
-    height: 563,
+    height: 350,
     useContentSize: true,
-    width: 1000,
+    width: 600,
     minHeight: 260,
     minWidth: 470,
     alwaysOnTop: false
