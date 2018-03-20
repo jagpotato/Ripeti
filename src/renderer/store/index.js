@@ -3,12 +3,13 @@ import Vuex from 'vuex'
 import VueYoutube from 'vue-youtube'
 import Datastore from 'nedb'
 import path from 'path'
+import {remote} from 'electron'
 
 Vue.use(Vuex)
 Vue.use(VueYoutube)
 
 const db = new Datastore({
-  filename: path.join(__dirname, 'db', 'chapterList.db'),
+  filename: path.join(remote.app.getPath('userData'), 'chapterlist.json'),
   autoload: true
 })
 
