@@ -1,8 +1,22 @@
-# ripeti
+# Ripeti
 
-> An electron-vue project
+チャプターを設定できるYouTubeプレイヤー  
 
-#### Build Setup
+## できること
+
+参考動画：https://www.youtube.com/watch?time_continue=4&v=LgOHSWyG-PM  
+
+画面上部にマウスを持っていくと上側にバーが表示される．  
+真ん中の入力欄にYouTube動画ページのURLを入力して検索ボタンを押すことで動画を再生する．  
+左側のメニューボタンは現在未実装．  
+![ss1](https://user-images.githubusercontent.com/15711514/37831717-e4548e4a-2ee9-11e8-972a-81789ec97f0d.png)  
+画面下部にマウスを持っていくとコントローラが表示される．  
+動画の再生と一時停止，音量の調整，シークバーの移動ができる．  
+右下の時計マークのチャプターボタンで現在の再生時間をチャプターに設定できる．  
+![ss2](https://user-images.githubusercontent.com/15711514/37831796-0be301da-2eea-11e8-9ed7-987155ab1087.png)  
+チャプターボタンの右隣にある三角マークのボタンを押すとチャプターリストが開く．再生時間を選択することでその時間に移動する．  
+![ss3](https://user-images.githubusercontent.com/15711514/37831822-1dc146be-2eea-11e8-930f-b6cc2587f6bb.png)  
+## Build Setup
 
 ``` bash
 # install dependencies
