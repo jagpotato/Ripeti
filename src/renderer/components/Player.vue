@@ -35,6 +35,7 @@ export default {
       this.$store.dispatch('Player/initApp', {
         value: this.$refs.youtube.player
       })
+      this.$store.dispatch('History/getHistoryFromDB')
     },
     cued () {
       this.$store.dispatch('Player/initChapterList')

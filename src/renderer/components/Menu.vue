@@ -1,11 +1,18 @@
 <template>
   <div id="menu">
-    <transition name="menu-stage"><div id="menu-stage" v-show="isMenuDisplayed" @click="closeMenu"></div></transition>
-    <transition name="menu-list"><div id="menu-list" v-show="isMenuDisplayed"></div></transition>
+    <transition name="menu-stage">
+      <div id="menu-stage" v-show="isMenuDisplayed" @click="closeMenu"></div>
+    </transition>
+    <transition name="menu-list">
+      <div id="menu-list" v-show="isMenuDisplayed">
+        <History></History>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script>
+import History from '@/components/History'
 import {mapState, mapActions} from 'vuex'
 
 export default {
@@ -18,6 +25,9 @@ export default {
     ...mapState('Menu', [
       'isMenuDisplayed'
     ])
+  },
+  components: {
+    History
   }
 }
 </script>
