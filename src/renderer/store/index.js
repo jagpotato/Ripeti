@@ -400,10 +400,20 @@ const History = {
   },
   mutations: {
     initHistory (state, dbData) {
+      // dbDataを元にhisotryListを初期化
       for (let i = 0; i < dbData.length; i++) {
         let src = 'https://i.ytimg.com/vi/' + dbData[i].videoId + '/default.jpg'
-        state.historyList.push({videoId: dbData[i].videoId, thumbnail: src})
+        state.historyList.push({videoId: dbData[i].videoId, thumbnail: src, playbackDate: dbData[i].playbackDate})
       }
+      // playbackDateが最新順にソート
+      state.historyList.sort((a, b) => {
+        if (a.playbackDate < b.playbackDate) {
+          return 1
+        }
+        if (a.playbackDate > b.playbackDate) {
+          return -1
+        }
+      })
     },
     addHistory (state, id) {
       let src = 'https://i.ytimg.com/vi/' + id + '/default.jpg'

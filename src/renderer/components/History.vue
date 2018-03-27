@@ -1,8 +1,14 @@
 <template>
   <div id="history">
+    <button id="history-open-button">
+      <i class="mdi mdi-history mdi-light mdi-18px"></i>
+      <span>History</span>
+    </button>
     <ul>
-      <button>History</button>
-      <li v-for="history in historyList" :key="history.videoId" @click="selectHistory(history)"><img :src="history.thumbnail"></li>
+      <li v-for="history in historyList" :key="history.videoId" @click="selectHistory(history)">
+        <button id="history-button"><img :src="history.thumbnail"></button>
+        <button id="history-remove-button"><i class="mdi mdi-close mdi-light mdi-24px"></i></button>
+      </li>
     </ul>
   </div>
 </template>
@@ -32,6 +38,20 @@ export default {
   width: 100%;
   height: 100%;
 }
+#history-open-button {
+  width: 100%;
+  height: 40px;
+  padding-left: 20px;
+  text-align: left;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 1.0);
+}
+#history-open-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+span {
+  margin-left: 10px;
+}
 ul {
   width: 100%;
   height: 100%;
@@ -41,6 +61,19 @@ ul {
 }
 li {
   cursor: pointer;
+  text-align: center;
+  display: flex;
+  justify-content: space-around;
+}
+#history-button {
+  width: 50%;
+}
+img {
+  width: 100px;
+}
+#history-remove-button {
+  width: 50%;
+  height: 30px;
 }
 ::-webkit-scrollbar {
   width: 5px;
@@ -50,13 +83,9 @@ li {
   border-radius: 10px;
 }
 button {
-  width: 100%;
   cursor: pointer;
   background-color: transparent;
   border: none;
   outline: none;
-}
-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
 }
 </style>
