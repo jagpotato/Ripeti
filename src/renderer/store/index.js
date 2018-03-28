@@ -1,17 +1,10 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import VueYoutube from 'vue-youtube'
-import Datastore from 'nedb'
-import path from 'path'
-import {remote} from 'electron'
+import api from '@/api/db'
 
 Vue.use(Vuex)
 Vue.use(VueYoutube)
-
-const db = new Datastore({
-  filename: path.join(remote.app.getPath('userData'), 'chapterlist.json'),
-  autoload: true
-})
 
 const Player = {
   namespaced: true,
@@ -158,20 +151,15 @@ const Player = {
       commit('Controller/initButton', null, {root: true})
       commit('setVolume', state.currentVolume)
     },
-    initChapterList ({commit, state}) {
-      db.findOne({'videoId': state.videoId}, (err, docs) => {
-        if (err) {
-          console.log(err)
-        }
-        if (docs === null) {
-          // dbにvideoIdが存在しない場合，追加
-          db.insert({videoId: state.videoId, chapterList: [], playbackDate: ''})
-          // historyListに追加
-          commit('History/addHistory', state.videoId, {root: true})
-        }
-        // dbからchapterListを取得
-        commit('Controller/loadChapterList', docs, {root: true})
-      })
+    async initChapterList ({commit, state, rootState}) {
+      const dbData = await api.searchVideoId(state.videoId)
+      if (dbData === null) {
+        // dbにvideoIdが存在しない場合，追加
+        await api.insertVideoId(state.videoId)
+        // historyListに追加
+        commit('History/addHistory', state.videoId, {root: true})
+      }
+      commit('Controller/loadChapterList', dbData, {root: true})
     },
     getVideoDuration ({commit, state}) {
       if (state.videoDuration === 0) {
@@ -312,7 +300,8 @@ const Controller = {
     }
   },
   actions: {
-    playVideo ({commit, state, rootState, getters}) {
+    async playVideo ({commit, state, dispatch, rootState, getters, rootGetters}) {
+      await dispatch('Player/initChapterList', null, {root: true})
       // pauseボタンを使用可能にする
       commit('toggleButton')
       // シークバーを使用可能にする
@@ -320,8 +309,11 @@ const Controller = {
         commit('enableSeekbar')
       }
       // dbに再生日時を登録
-      db.update({'videoId': rootState.Player.videoId}, {$set: {playbackDate: getters.getDate(new Date())}})
-      commit('History/updateHistory', rootState.Player.videoId, {root: true})
+      const date = getters.getDate(new Date())
+      api.updatePlaybackDate(rootState.Player.videoId, date)
+      const index = rootGetters['History/getHistoryIndex'](rootState.Player.videoId)
+      //
+      commit('History/updateHistory', index, {root: true})
       // requestAnimationFrame
       let loop = () => {
         // 現在の再生時間を取得
@@ -346,13 +338,13 @@ const Controller = {
       // chapterListに同じ時間のchapterが含まれていない場合，chapterを追加
       if (getters.getChapterIndex(currentTime) === -1) {
         commit('addChapter', {currentTime, currentTimeText})
-        db.update({'videoId': rootState.Player.videoId}, {$set: {chapterList: state.chapterList}})
+        api.updateChapterList(rootState.Player.videoId, state.chapterList)
       }
     },
     removeChapter ({commit, state, getters, rootState}, {value}) {
       const index = getters.getChapterIndex(value.time)
       commit('removeChapter', index)
-      db.update({'videoId': rootState.Player.videoId}, {$set: {chapterList: state.chapterList}})
+      api.updateChapterList(rootState.Player.videoId, state.chapterList)
     },
     moveSeekBar ({commit, state, rootState}, {value}) {
       if (rootState.Player.isEnd === true) {
@@ -396,51 +388,75 @@ const Menu = {
 const History = {
   namespaced: true,
   state: {
-    historyList: []
+    historyList: [],
+    isHistoryDisplayed: true
   },
-  mutations: {
-    initHistory (state, dbData) {
-      // dbDataを元にhisotryListを初期化
-      for (let i = 0; i < dbData.length; i++) {
-        let src = 'https://i.ytimg.com/vi/' + dbData[i].videoId + '/default.jpg'
-        state.historyList.push({videoId: dbData[i].videoId, thumbnail: src, playbackDate: dbData[i].playbackDate})
-      }
-      // playbackDateが最新順にソート
-      state.historyList.sort((a, b) => {
-        if (a.playbackDate < b.playbackDate) {
-          return 1
+  getters: {
+    getHistoryIndex (state) {
+      return (id) => {
+        for (let i = 0; i < state.historyList.length; i++) {
+          if (state.historyList[i].videoId === id) {
+            return i
+          }
         }
-        if (a.playbackDate > b.playbackDate) {
-          return -1
-        }
-      })
-    },
-    addHistory (state, id) {
-      let src = 'https://i.ytimg.com/vi/' + id + '/default.jpg'
-      state.historyList.unshift({videoId: id, thumbnail: src})
-    },
-    updateHistory (state, id) {
-      for (let i = 0; i < state.historyList.length; i++) {
-        if (state.historyList[i].videoId === id) {
-          let select = state.historyList.splice(i, 1)
-          state.historyList.unshift(select[0])
-        }
+        return -1
       }
     }
   },
-  actions: {
-    getHistoryFromDB ({commit, state}) {
-      // dbのvideoIdをhistoryListに格納
-      db.find({}, (err, docs) => {
-        if (err) {
-          console.log(err)
+  mutations: {
+    initHistory (state, dbData) {
+      if (dbData.length === 0) {
+        // let src = 'https://i.ytimg.com/vi/' + '2AFqYeXKK3I' + '/default.jpg'
+        // state.historyList.push({videoId: '2AFqYeXKK3I', thumbnail: src, playbackDate: 0})
+      } else {
+        // dbDataを元にhisotryListを初期化
+        for (let i = 0; i < dbData.length; i++) {
+          let src = 'https://i.ytimg.com/vi/' + dbData[i].videoId + '/default.jpg'
+          state.historyList.push({videoId: dbData[i].videoId, thumbnail: src, playbackDate: dbData[i].playbackDate})
         }
-        commit('History/initHistory', docs, {root: true})
-      })
+        // playbackDateが大きい(最新)順にソート
+        state.historyList.sort((a, b) => {
+          if (a.playbackDate < b.playbackDate) {
+            return 1
+          }
+          if (a.playbackDate > b.playbackDate) {
+            return -1
+          }
+        })
+      }
+    },
+    addHistory (state, id) {
+      let src = 'https://i.ytimg.com/vi/' + id + '/default.jpg'
+      state.historyList.unshift({videoId: id, thumbnail: src, playbackDate: 0})
+    },
+    updateHistory (state, index) {
+      let select = state.historyList.splice(index, 1)
+      state.historyList.unshift(select[0])
+    },
+    toggleHistoryDisplay (state) {
+      state.isHistoryDisplayed = !state.isHistoryDisplayed
+    },
+    removeHistory (state, index) {
+      state.historyList.splice(index, 1)
+    }
+  },
+  actions: {
+    async getHistoryFromDB ({commit, state}) {
+      // dbのvideoIdをhistoryListに格納
+      const dbData = await api.getHistory()
+      commit('History/initHistory', dbData, {root: true})
+    },
+    openHistory ({commit, state}) {
+      commit('toggleHistoryDisplay')
     },
     selectHistory ({commit, state}, {videoId}) {
       commit('Player/cueVideo', videoId, {root: true})
       commit('Controller/initButton', null, {root: true})
+    },
+    removeHistory ({commit, getters}, {videoId}) {
+      api.remove(videoId)
+      let index = getters.getHistoryIndex(videoId)
+      commit('removeHistory', index)
     }
   }
 }
