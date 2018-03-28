@@ -1,11 +1,16 @@
 <template>
   <div id="menu">
-    <transition name="menu-stage"><div id="menu-stage" v-show="isMenuDisplayed" @click="closeMenu"></div></transition>
-    <transition name="menu-list"><div id="menu-list" v-show="isMenuDisplayed"></div></transition>
+    <div id="menu-stage" v-show="isMenuDisplayed" @click="closeMenu"></div>
+    <transition name="menu-list">
+      <div id="menu-list" v-show="isMenuDisplayed">
+        <History></History>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script>
+import History from '@/components/History'
 import {mapState, mapActions} from 'vuex'
 
 export default {
@@ -18,6 +23,9 @@ export default {
     ...mapState('Menu', [
       'isMenuDisplayed'
     ])
+  },
+  components: {
+    History
   }
 }
 </script>
@@ -40,16 +48,11 @@ export default {
   top: 0;
   left: 0;
   z-index: 2;
-  width: 30%;
+  width: 25%;
   height: 100vh;
+  min-width: 150px;
   background-color: rgba(42, 42, 42, 1.0);
   -webkit-app-region: no-drag;
-}
-.menu-stage-enter-active, .menu-stage-leave-active {
-  transition: all 0.3s;
-}
-.menu-stage-enter, .menu-stage-leave-to {
-  opacity: 0;
 }
 .menu-list-enter-active, .menu-list-leave-active {
   transition: all 0.3s;
