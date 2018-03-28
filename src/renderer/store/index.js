@@ -148,7 +148,7 @@ const Player = {
         commit('resize')
       }, false)
       // play，pauseボタンの初期化
-      commit('Controller/initButton', null, {root: true})
+      commit('Controller/disablePlayButton', null, {root: true})
       commit('setVolume', state.currentVolume)
     },
     async initChapterList ({commit, state, rootState}) {
@@ -184,7 +184,7 @@ const Player = {
     },
     endVideo ({commit, state}) {
       commit('setEndFlag')
-      commit('Controller/initButton', null, {root: true})
+      commit('Controller/disablePlayButton', null, {root: true})
       commit('Controller/stopTimer', null, {root: true})
     }
   }
@@ -212,7 +212,7 @@ const Header = {
         if (splitUrl !== null) {
           const id = splitUrl[0].substr(2)
           commit('Player/cueVideo', id, {root: true})
-          commit('Controller/initButton', null, {root: true})
+          commit('Controller/disablePlayButton', null, {root: true})
         }
         commit('initUrl')
       }
@@ -232,8 +232,8 @@ const Controller = {
     timer: '',
     chapterList: [],
     isPlayButtonDisabled: true,
-    isPauseButtonDisabled: true,
-    isSeekbarDisabled: true
+    isSeekbarDisabled: true,
+    isChapterButtonDisabled: true
   },
   getters: {
     getChapterIndex (state) {
@@ -248,12 +248,12 @@ const Controller = {
     },
     getDate (state) {
       return (date) => {
-        let year = date.getFullYear().toString(10)
-        let month = ('0' + (date.getMonth() + 1)).substr(-2)
-        let day = ('0' + date.getDate()).substr(-2)
-        let hours = ('0' + date.getHours()).substr(-2)
-        let minutes = ('0' + date.getMinutes()).substr(-2)
-        let seconds = ('0' + date.getSeconds()).substr(-2)
+        const year = date.getFullYear().toString(10)
+        const month = ('0' + (date.getMonth() + 1)).substr(-2)
+        const day = ('0' + date.getDate()).substr(-2)
+        const hours = ('0' + date.getHours()).substr(-2)
+        const minutes = ('0' + date.getMinutes()).substr(-2)
+        const seconds = ('0' + date.getSeconds()).substr(-2)
         return year + month + day + hours + minutes + seconds
       }
     }
@@ -265,13 +265,11 @@ const Controller = {
     stopTimer (state) {
       cancelAnimationFrame(state.timer)
     },
-    initButton (state) {
-      state.isPlayButtonDisabled = false
-      state.isPauseButtonDisabled = true
+    disablePlayButton (state) {
+      state.isPlayButtonDisabled = true
     },
-    toggleButton (state) {
-      state.isPlayButtonDisabled = !state.isPlayButtonDisabled
-      state.isPauseButtonDisabled = !state.isPauseButtonDisabled
+    enablePlayButton (state) {
+      state.isPlayButtonDisabled = false
     },
     loadChapterList (state, dbData) {
       if (dbData === null) {
@@ -297,25 +295,33 @@ const Controller = {
     },
     enableSeekbar (state) {
       state.isSeekbarDisabled = false
+    },
+    enableChapterButton (state) {
+      state.isChapterButtonDisabled = false
     }
   },
   actions: {
     async playVideo ({commit, state, dispatch, rootState, getters, rootGetters}) {
+      // initChapterListアクションを先に実行
       await dispatch('Player/initChapterList', null, {root: true})
-      // pauseボタンを使用可能にする
-      commit('toggleButton')
+      // 再生ボタンを使用可能にする
+      commit('enablePlayButton')
       // シークバーを使用可能にする
       if (state.isSeekbarDisabled === true) {
         commit('enableSeekbar')
+      }
+      // チャプターボタンを使用可能にする
+      if (state.isChapterButtonDisabled === true) {
+        commit('enableChapterButton')
       }
       // dbに再生日時を登録
       const date = getters.getDate(new Date())
       api.updatePlaybackDate(rootState.Player.videoId, date)
       const index = rootGetters['History/getHistoryIndex'](rootState.Player.videoId)
-      //
+      // 再生する動画を履歴の一番上に
       commit('History/updateHistory', index, {root: true})
       // requestAnimationFrame
-      let loop = () => {
+      const loop = () => {
         // 現在の再生時間を取得
         rootState.Player.player.getCurrentTime().then((value) => {
           commit('Player/updateCurrentVideoTime', value, {root: true})
@@ -330,7 +336,6 @@ const Controller = {
       loop()
     },
     pauseVideo ({commit, state}) {
-      commit('toggleButton')
       commit('stopTimer')
       commit('Player/pauseVideo', null, {root: true})
     },
@@ -368,7 +373,7 @@ const Controller = {
 const Menu = {
   namespaced: true,
   state: {
-    isMenuDisplayed: true
+    isMenuDisplayed: false
   },
   getters: {},
   mutations: {
@@ -405,32 +410,27 @@ const History = {
   },
   mutations: {
     initHistory (state, dbData) {
-      if (dbData.length === 0) {
-        // let src = 'https://i.ytimg.com/vi/' + '2AFqYeXKK3I' + '/default.jpg'
-        // state.historyList.push({videoId: '2AFqYeXKK3I', thumbnail: src, playbackDate: 0})
-      } else {
-        // dbDataを元にhisotryListを初期化
-        for (let i = 0; i < dbData.length; i++) {
-          let src = 'https://i.ytimg.com/vi/' + dbData[i].videoId + '/default.jpg'
-          state.historyList.push({videoId: dbData[i].videoId, thumbnail: src, playbackDate: dbData[i].playbackDate})
-        }
-        // playbackDateが大きい(最新)順にソート
-        state.historyList.sort((a, b) => {
-          if (a.playbackDate < b.playbackDate) {
-            return 1
-          }
-          if (a.playbackDate > b.playbackDate) {
-            return -1
-          }
-        })
+      // dbDataを元にhisotryListを初期化
+      for (let i = 0; i < dbData.length; i++) {
+        let src = 'https://i.ytimg.com/vi/' + dbData[i].videoId + '/default.jpg'
+        state.historyList.push({videoId: dbData[i].videoId, thumbnail: src, playbackDate: dbData[i].playbackDate})
       }
+      // playbackDateが大きい(最新)順にソート
+      state.historyList.sort((a, b) => {
+        if (a.playbackDate < b.playbackDate) {
+          return 1
+        }
+        if (a.playbackDate > b.playbackDate) {
+          return -1
+        }
+      })
     },
     addHistory (state, id) {
-      let src = 'https://i.ytimg.com/vi/' + id + '/default.jpg'
+      const src = 'https://i.ytimg.com/vi/' + id + '/default.jpg'
       state.historyList.unshift({videoId: id, thumbnail: src, playbackDate: 0})
     },
     updateHistory (state, index) {
-      let select = state.historyList.splice(index, 1)
+      const select = state.historyList.splice(index, 1)
       state.historyList.unshift(select[0])
     },
     toggleHistoryDisplay (state) {
@@ -451,11 +451,11 @@ const History = {
     },
     selectHistory ({commit, state}, {videoId}) {
       commit('Player/cueVideo', videoId, {root: true})
-      commit('Controller/initButton', null, {root: true})
+      commit('Controller/disablePlayButton', null, {root: true})
     },
     removeHistory ({commit, getters}, {videoId}) {
       api.remove(videoId)
-      let index = getters.getHistoryIndex(videoId)
+      const index = getters.getHistoryIndex(videoId)
       commit('removeHistory', index)
     }
   }

@@ -9,7 +9,7 @@
       <div id="control-item">
         <div id="control-item-left">
           <transition name="play-button" mode="out-in">
-            <button key="pause" id="pause-button" @click="pauseVideo" v-if="isPlaying" :disabled="isPauseButtonDisabled"><i class="mdi mdi-pause mdi-light mdi-24px"></i></button>
+            <button key="pause" id="pause-button" @click="pauseVideo" v-if="isPlaying"><i class="mdi mdi-pause mdi-light mdi-24px"></i></button>
             <button key="play" id="play-button" @click="playVideo" v-else :disabled="isPlayButtonDisabled"><i class="mdi mdi-play mdi-light mdi-24px"></i></button>
           </transition>
           <div id="volume">
@@ -22,7 +22,7 @@
         </div>
         <div id="control-item-right">
           <div id="chapter">
-            <button id="chapter-add-button" @click="addChapter"><i id="chapter-add-icon" class="mdi mdi-clock mdi-light mdi-24px"></i></button>
+            <button id="chapter-add-button" @click="addChapter" :disabled="isChapterButtonDisabled"><i id="chapter-add-icon" class="mdi mdi-clock mdi-light mdi-24px"></i></button>
             <button id="chapter-list-button" @click="openChapterList"><i id="chapter-list-icon" class="mdi mdi-menu-up mdi-light mdi-24px"></i></button>
           </div>
         </div>
@@ -86,8 +86,8 @@ export default {
     ]),
     ...mapState('Controller', [
       'isPlayButtonDisabled',
-      'isPauseButtonDisabled',
-      'isSeekbarDisabled'
+      'isSeekbarDisabled',
+      'isChapterButtonDisabled'
     ]),
     ...mapGetters('Player', [
       'currentTimeText',
