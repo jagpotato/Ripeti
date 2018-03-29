@@ -2,25 +2,39 @@
 
 チャプターを設定できるYouTubeプレイヤー  
 
+## ダウンロード
+
+[Releases](https://github.com/jagpotato/Ripeti/releases)
+
 ## できること
 
-参考動画：https://www.youtube.com/watch?time_continue=4&v=LgOHSWyG-PM  
+- 動画の選択
+- 動画の制御
+- チャプターの設定
 
-画面上部にマウスを持っていくと上側にバーが表示される．  
-真ん中の入力欄にYouTube動画ページのURLを入力して検索ボタンを押すことで動画を再生する．  
-左側のメニューボタンは現在未実装．  
+#### 動画の選択
+
+検索欄にYouTube動画ページのURLを入力して検索ボタンを押すことで動画を再生する．一度このプレイヤーで見た動画は視聴履歴からも再生できる．  
 
 ![ss1](https://user-images.githubusercontent.com/15711514/37832404-d9c38772-2eeb-11e8-9f4d-593088d5c262.png)  
 
-画面下部にマウスを持っていくとコントローラが表示される．  
+![ss4](https://user-images.githubusercontent.com/15711514/38078947-c1a0a3aa-3378-11e8-8ab4-5c0e16426d6a.png)  
+
+#### 動画の制御
+
 動画の再生と一時停止，音量の調整，シークバーの移動ができる．  
-右下の時計マークのチャプターボタンで現在の再生時間をチャプターに設定できる．  
 
-![ss2](https://user-images.githubusercontent.com/15711514/37832427-e7ccf47a-2eeb-11e8-89d4-ade84a3086cb.png)  
+![ss2](https://user-images.githubusercontent.com/15711514/38080773-4ad9d264-337d-11e8-97ea-04c16bd64308.png)  
 
-チャプターボタンの右隣にある三角マークのボタンを押すとチャプターリストが開く．再生時間を選択することでその時間に移動する．  
+#### チャプターの設定
 
-![ss3](https://user-images.githubusercontent.com/15711514/37832443-f39cc672-2eeb-11e8-8ebf-686328dd63fb.png)  
+右下にある+マークのボタンで現在の再生時間をチャプターに設定できる．右隣にある三角マークのボタンを押すとチャプターリストが開く．再生時間を選択することでその時間に移動する．  
+
+![ss3](https://user-images.githubusercontent.com/15711514/38080800-5fdccef0-337d-11e8-8741-176d2f531862.png)  
+
+#### 参考動画
+
+[【KINGDOM HEARTS III】 D23 Expo Japan 2018 Trailer - YouTube](https://www.youtube.com/watch?time_continue=4&v=LgOHSWyG-PM)  
 
 ## Build Setup
 
