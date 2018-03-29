@@ -184,7 +184,6 @@ const Player = {
     },
     endVideo ({commit, state}) {
       commit('setEndFlag')
-      commit('Controller/disablePlayButton', null, {root: true})
       commit('Controller/stopTimer', null, {root: true})
     }
   }

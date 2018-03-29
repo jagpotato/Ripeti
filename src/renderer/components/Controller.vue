@@ -22,7 +22,7 @@
         </div>
         <div id="control-item-right">
           <div id="chapter">
-            <button id="chapter-add-button" @click="addChapter" :disabled="isChapterButtonDisabled"><i id="chapter-add-icon" class="mdi mdi-clock mdi-light mdi-24px"></i></button>
+            <button id="chapter-add-button" @click="addChapter" :disabled="isChapterButtonDisabled"><i id="chapter-add-icon" class="mdi mdi-library-plus mdi-light mdi-24px"></i></button>
             <button id="chapter-list-button" @click="openChapterList"><i id="chapter-list-icon" class="mdi mdi-menu-up mdi-light mdi-24px"></i></button>
           </div>
         </div>

@@ -40,7 +40,6 @@ export default {
   width: 100vw;
   height: 100vh;
   background-color: rgba(0, 0, 0, 0.7);
-  transition-duration: 1s;
   -webkit-app-region: no-drag;
 }
 #menu-list {

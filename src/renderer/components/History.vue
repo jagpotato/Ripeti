@@ -65,7 +65,7 @@ span {
 }
 ul {
   width: 100%;
-  height: 100%;
+  height: 80%;
   list-style: none;
   padding: 0;
   overflow: auto;
