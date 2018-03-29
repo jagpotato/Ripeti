@@ -107,10 +107,6 @@ export default {
   display: flex;
   justify-content: center;
   -webkit-app-region: no-drag;
-  /* opacity: 0; */
-}
-#footer:hover {
-  /* opacity: 1; */
 }
 #controller {
   /* background-color: rgba(255, 0, 255, 0.5); */
@@ -202,7 +198,6 @@ export default {
   outline: 0;
   -webkit-appearance: none;
   -moz-appearance: none;
-  appearance: none;
   border-radius: 50px;
   height: 6px;
   margin-top: auto;
@@ -212,7 +207,6 @@ export default {
 #seek-bar::-webkit-slider-thumb {
   -webkit-appearance: none;
   -moz-appearance: none;
-  appearance: none;
   background-color: #f44336;
   width: 14px;
   height: 14px;
@@ -222,7 +216,6 @@ export default {
   outline: 0;
   -webkit-appearance: none;
   -moz-appearance: none;
-  appearance: none;
   border-radius: 50px;
   height: 6px;
   /* background-image: -webkit-gradient(linear, left top, right top, color-stop(0.01, #ffffff), color-stop(0.01, #707070)); */
@@ -230,7 +223,6 @@ export default {
 #volume-bar::-webkit-slider-thumb {
   -webkit-appearance: none;
   -moz-appearance: none;
-  appearance: none;
   background-color: #ffffff;
   width: 14px;
   height: 14px;
