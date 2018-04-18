@@ -206,12 +206,16 @@ const Header = {
   actions: {
     searchVideo ({commit, state}) {
       if (state.url !== '') {
-        const splitUrl = state.url.match(/v=[0-9a-zA-Z-_]+/)
-        // 動画を右クリック，「動画のURLをコピー」用 /\/[0-9a-zA-Z-_]{11}/
-        if (splitUrl !== null) {
+        const splitUrl = state.url.match(/v=[0-9a-zA-Z-_]+|list=[0-9a-zA-Z-_]+/)
+        // 動画を右クリック，「動画のURLをコピー」用 → /\/[0-9a-zA-Z-_]{11}/
+        // 動画の読み込み
+        if (/^v=/.test(splitUrl) === true) {
           const id = splitUrl[0].substr(2)
           commit('Player/cueVideo', id, {root: true})
           commit('Controller/disablePlayButton', null, {root: true})
+        // プレイリストの読み込み
+        } else if (/^list=/.test(splitUrl) === true) {
+          console.log(splitUrl)
         }
         commit('initUrl')
       }
