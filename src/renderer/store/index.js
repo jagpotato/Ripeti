@@ -1,7 +1,8 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import VueYoutube from 'vue-youtube'
-import api from '@/api/db'
+import db from '@/api/db'
+import youtubeData from '@/api/youtube'
 
 Vue.use(Vuex)
 Vue.use(VueYoutube)
@@ -79,6 +80,9 @@ const Player = {
       state.videoDuration = 0
       state.player.cueVideoById(state.videoId)
     },
+    cuePlaylist (state, items) {
+      state.player.cuePlaylist(items)
+    },
     playVideo (state) {
       if (state.isEnd === true) {
         state.isEnd = false
@@ -152,10 +156,10 @@ const Player = {
       commit('setVolume', state.currentVolume)
     },
     async initChapterList ({commit, state, rootState}) {
-      const dbData = await api.searchVideoId(state.videoId)
+      const dbData = await db.searchVideoId(state.videoId)
       if (dbData === null) {
         // dbにvideoIdが存在しない場合，追加
-        await api.insertVideoId(state.videoId)
+        await db.insertVideoId(state.videoId)
         // historyListに追加
         commit('History/addHistory', state.videoId, {root: true})
       }
@@ -207,7 +211,7 @@ const Header = {
     searchVideo ({commit, state}) {
       if (state.url !== '') {
         const splitUrl = state.url.match(/v=[0-9a-zA-Z-_]+|list=[0-9a-zA-Z-_]+/)
-        // 動画を右クリック，「動画のURLをコピー」用 → /\/[0-9a-zA-Z-_]{11}/
+        // /\/[0-9a-zA-Z-_]{11}/ 動画を右クリック，「動画のURLをコピー」用
         // 動画の読み込み
         if (/^v=/.test(splitUrl) === true) {
           const id = splitUrl[0].substr(2)
@@ -215,7 +219,17 @@ const Header = {
           commit('Controller/disablePlayButton', null, {root: true})
         // プレイリストの読み込み
         } else if (/^list=/.test(splitUrl) === true) {
-          console.log(splitUrl)
+          const playlistId = splitUrl[0].substr(5)
+          // commit('Player/cuePlaylist', id, {root: true})
+          // youtubeData.getPlaylist(playlistId)
+          let playlistItems = []
+          youtubeData.getPlaylist(playlistId)
+            .then((items) => {
+              for (let item of items) {
+                playlistItems.push(item.snippet.resourceId.videoId)
+              }
+              commit('Player/cuePlaylist', playlistItems, {root: true})
+            })
         }
         commit('initUrl')
       }
@@ -319,7 +333,7 @@ const Controller = {
       }
       // dbに再生日時を登録
       const date = getters.getDate(new Date())
-      api.updatePlaybackDate(rootState.Player.videoId, date)
+      db.updatePlaybackDate(rootState.Player.videoId, date)
       const index = rootGetters['History/getHistoryIndex'](rootState.Player.videoId)
       // 再生する動画を履歴の一番上に
       commit('History/updateHistory', index, {root: true})
@@ -346,13 +360,13 @@ const Controller = {
       // chapterListに同じ時間のchapterが含まれていない場合，chapterを追加
       if (getters.getChapterIndex(currentTime) === -1) {
         commit('addChapter', {currentTime, currentTimeText})
-        api.updateChapterList(rootState.Player.videoId, state.chapterList)
+        db.updateChapterList(rootState.Player.videoId, state.chapterList)
       }
     },
     removeChapter ({commit, state, getters, rootState}, {value}) {
       const index = getters.getChapterIndex(value.time)
       commit('removeChapter', index)
-      api.updateChapterList(rootState.Player.videoId, state.chapterList)
+      db.updateChapterList(rootState.Player.videoId, state.chapterList)
     },
     moveSeekBar ({commit, state, rootState}, {value}) {
       if (rootState.Player.isEnd === true) {
@@ -446,7 +460,7 @@ const History = {
   actions: {
     async getHistoryFromDB ({commit, state}) {
       // dbのvideoIdをhistoryListに格納
-      const dbData = await api.getHistory()
+      const dbData = await db.getHistory()
       commit('History/initHistory', dbData, {root: true})
     },
     openHistory ({commit, state}) {
@@ -457,7 +471,7 @@ const History = {
       commit('Controller/disablePlayButton', null, {root: true})
     },
     removeHistory ({commit, getters}, {videoId}) {
-      api.remove(videoId)
+      db.remove(videoId)
       const index = getters.getHistoryIndex(videoId)
       commit('removeHistory', index)
     }
