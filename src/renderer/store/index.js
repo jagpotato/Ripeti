@@ -7,6 +7,11 @@ import youtubeData from '@/api/youtube'
 Vue.use(Vuex)
 Vue.use(VueYoutube)
 
+/******************
+*******************
+* Player
+*******************
+*******************/
 const Player = {
   namespaced: true,
   state: {
@@ -27,6 +32,9 @@ const Player = {
     isPlaying: false,
     isMute: false,
     isChapterDisplayed: false,
+    isPlaylist: false,
+    playlistItems: [],
+    playlistPosition: 0,
     controllerOpacity: 0,
     seekBarBackground: '',
     volumeBarBackground: ''
@@ -80,8 +88,12 @@ const Player = {
       state.videoDuration = 0
       state.player.cueVideoById(state.videoId)
     },
-    cuePlaylist (state, items) {
-      state.player.cuePlaylist(items)
+    setPlaylist (state, items) {
+      state.playlistItems = items.slice()
+      state.isPlaylist = true
+    },
+    setPlaylistPosition (state, position) {
+      state.playlistPosition = position
     },
     playVideo (state) {
       if (state.isEnd === true) {
@@ -187,12 +199,23 @@ const Player = {
       }
     },
     endVideo ({commit, state}) {
-      commit('setEndFlag')
-      commit('Controller/stopTimer', null, {root: true})
+      if (state.isPlaylist === true) {
+        commit('setPlaylistPosition', state.playlistPosition + 1)
+        commit('cueVideo', state.playlistItems[state.playlistPosition])
+        commit('Controller/disablePlayButton', null, {root: true})
+      } else {
+        commit('setEndFlag')
+        commit('Controller/stopTimer', null, {root: true})
+      }
     }
   }
 }
 
+/******************
+*******************
+* Header
+*******************
+*******************/
 const Header = {
   namespaced: true,
   state: {
@@ -208,7 +231,7 @@ const Header = {
     }
   },
   actions: {
-    searchVideo ({commit, state}) {
+    searchVideo ({commit, state, dispatch}) {
       if (state.url !== '') {
         const splitUrl = state.url.match(/v=[0-9a-zA-Z-_]+|list=[0-9a-zA-Z-_]+/)
         // /\/[0-9a-zA-Z-_]{11}/ 動画を右クリック，「動画のURLをコピー」用
@@ -220,18 +243,26 @@ const Header = {
         // プレイリストの読み込み
         } else if (/^list=/.test(splitUrl) === true) {
           const playlistId = splitUrl[0].substr(5)
-          // commit('Player/cuePlaylist', id, {root: true})
-          // youtubeData.getPlaylist(playlistId)
           let playlistItems = []
           youtubeData.getPlaylist(playlistId)
             .then((items) => {
               for (let item of items) {
                 playlistItems.push(item.snippet.resourceId.videoId)
               }
-              commit('Player/cuePlaylist', playlistItems, {root: true})
+              // dbに再生リスト登録
+              dispatch('searchPlaylistDB', {playlistId, playlistItems})
+              commit('Player/setPlaylist', playlistItems, {root: true})
+              commit('Player/cueVideo', playlistItems[0], {root: true})
+              commit('Controller/disablePlayButton', null, {root: true})
             })
         }
         commit('initUrl')
+      }
+    },
+    async searchPlaylistDB ({commit, state}, {playlistId, playlistItems}) {
+      const dbData = await db.searchPlaylistId(playlistId)
+      if (dbData === null) {
+        await db.insertPlaylistId(playlistId, playlistItems)
       }
     },
     inputUrl ({commit, state}, {url}) {
@@ -243,6 +274,11 @@ const Header = {
   }
 }
 
+/******************
+*******************
+* Controller
+*******************
+*******************/
 const Controller = {
   namespaced: true,
   state: {
@@ -387,6 +423,11 @@ const Controller = {
   }
 }
 
+/******************
+*******************
+* Menu
+*******************
+*******************/
 const Menu = {
   namespaced: true,
   state: {
@@ -407,6 +448,11 @@ const Menu = {
   }
 }
 
+/******************
+*******************
+* History
+*******************
+*******************/
 const History = {
   namespaced: true,
   state: {
