@@ -1,11 +1,11 @@
 <template>
   <transition name="menu-content">
-    <div id="history" v-show="isHistoryDisplayed">
-      <ul id="history-list">
-        <li class="list-item" v-for="history in historyList" :key="history.videoId">
-          <div class="list-img-area"><img class="list-img" :src="history.thumbnail" @click="selectHistory(history)"></div>
-          <div class="list-title" @click="selectHistory(history)">{{history.title}}</div>
-          <div class="list-remove-button" @click="removeHistory(history)"></div>
+    <div id="playlist" v-show="isPlaylistDisplayed">
+      <ul id="playlist-list">
+        <li class="list-item" v-for="playlist in playlistList" :key="playlist.playlistId">
+          <div class="list-img-area"><img class="list-img" :src="playlist.thumbnail" @click="selectPlaylist(playlist)"></div>
+          <div class="list-title" @click="selectPlaylist(playlist)">{{playlist.title}}</div>
+          <div class="list-remove-button" @click="removePlaylist(playlist)"></div>
         </li>
       </ul>
     </div>
@@ -13,27 +13,24 @@
 </template>
 
 <script>
-import {mapState, mapActions} from 'vuex'
+import {mapState} from 'vuex'
 export default {
   methods: {
-    selectHistory (history) {
-      this.$store.dispatch('History/selectHistory', {
-        videoId: history.videoId
+    selectPlaylist (playlist) {
+      this.$store.dispatch('Playlist/selectPlaylist', {
+        playlistItems: playlist.items
       })
     },
-    removeHistory (history) {
-      this.$store.dispatch('History/removeHistory', {
-        videoId: history.videoId
+    removePlaylist (playlist) {
+      this.$store.dispatch('Playlist/removePlaylist', {
+        playlistId: playlist.playlistId
       })
-    },
-    ...mapActions('History', [
-      'openHistory'
-    ])
+    }
   },
   computed: {
-    ...mapState('History', [
-      'historyList',
-      'isHistoryDisplayed'
+    ...mapState('Playlist', [
+      'playlistList',
+      'isPlaylistDisplayed'
     ])
   }
 }
@@ -41,7 +38,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-#history {
+#playlist {
   position: absolute;
   top: 0;
   left: 150px;
@@ -52,7 +49,7 @@ export default {
   overflow: auto;
   -webkit-app-region: no-drag;
 }
-#history-list {
+#playlist-list {
   width: 100%;
   list-style: none;
   padding: 0;

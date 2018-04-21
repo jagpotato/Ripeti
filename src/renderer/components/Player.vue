@@ -36,6 +36,7 @@ export default {
         value: this.$refs.youtube.player
       })
       this.$store.dispatch('History/getHistoryFromDB')
+      this.$store.dispatch('Playlist/getPlaylistFromDB')
     },
     cued () {
       this.$store.dispatch('Controller/playVideo')

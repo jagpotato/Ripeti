@@ -1,11 +1,17 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import VueYoutube from 'vue-youtube'
-import api from '@/api/db'
+import db from '@/api/db'
+import youtubeData from '@/api/youtube'
 
 Vue.use(Vuex)
 Vue.use(VueYoutube)
 
+/******************
+*******************
+* Player
+*******************
+*******************/
 const Player = {
   namespaced: true,
   state: {
@@ -26,6 +32,9 @@ const Player = {
     isPlaying: false,
     isMute: false,
     isChapterDisplayed: false,
+    isPlaylist: false,
+    playlistItems: [],
+    playlistPosition: 0,
     controllerOpacity: 0,
     seekBarBackground: '',
     volumeBarBackground: ''
@@ -78,6 +87,19 @@ const Player = {
       state.videoId = id
       state.videoDuration = 0
       state.player.cueVideoById(state.videoId)
+    },
+    setPlaylist (state, items) {
+      state.playlistItems = items.slice()
+      state.playlistPosition = 0
+      state.isPlaylist = true
+    },
+    endPlaylist (state) {
+      state.playlistItems = []
+      state.playlistPosition = 0
+      state.isPlaylist = false
+    },
+    setPlaylistPosition (state, position) {
+      state.playlistPosition = position
     },
     playVideo (state) {
       if (state.isEnd === true) {
@@ -152,12 +174,16 @@ const Player = {
       commit('setVolume', state.currentVolume)
     },
     async initChapterList ({commit, state, rootState}) {
-      const dbData = await api.searchVideoId(state.videoId)
+      const dbData = await db.searchVideoId(state.videoId)
       if (dbData === null) {
         // dbにvideoIdが存在しない場合，追加
-        await api.insertVideoId(state.videoId)
+        await db.insertVideoId(state.videoId)
         // historyListに追加
-        commit('History/addHistory', state.videoId, {root: true})
+        youtubeData.getVideoTitle(state.videoId)
+          .then((title) => {
+            const id = state.videoId
+            commit('History/addHistory', {id, title}, {root: true})
+          })
       }
       commit('Controller/loadChapterList', dbData, {root: true})
     },
@@ -183,12 +209,23 @@ const Player = {
       }
     },
     endVideo ({commit, state}) {
-      commit('setEndFlag')
-      commit('Controller/stopTimer', null, {root: true})
+      if (state.isPlaylist === true) {
+        commit('setPlaylistPosition', state.playlistPosition + 1)
+        commit('cueVideo', state.playlistItems[state.playlistPosition])
+        commit('Controller/disablePlayButton', null, {root: true})
+      } else {
+        commit('setEndFlag')
+        commit('Controller/stopTimer', null, {root: true})
+      }
     }
   }
 }
 
+/******************
+*******************
+* Header
+*******************
+*******************/
 const Header = {
   namespaced: true,
   state: {
@@ -204,16 +241,45 @@ const Header = {
     }
   },
   actions: {
-    searchVideo ({commit, state}) {
+    searchVideo ({commit, state, rootState, dispatch}) {
       if (state.url !== '') {
-        const splitUrl = state.url.match(/v=[0-9a-zA-Z-_]+/)
-        // 動画を右クリック，「動画のURLをコピー」用 /\/[0-9a-zA-Z-_]{11}/
-        if (splitUrl !== null) {
+        const splitUrl = state.url.match(/v=[0-9a-zA-Z-_]+|list=[0-9a-zA-Z-_]+/)
+        // /\/[0-9a-zA-Z-_]{11}/ 動画を右クリック，「動画のURLをコピー」用
+        // 動画の読み込み
+        if (/^v=/.test(splitUrl) === true) {
+          if (rootState.Player.isPlaylist === true) {
+            commit('Player/endPlaylist', null, {root: true})
+          }
           const id = splitUrl[0].substr(2)
           commit('Player/cueVideo', id, {root: true})
           commit('Controller/disablePlayButton', null, {root: true})
+        // プレイリストの読み込み
+        } else if (/^list=/.test(splitUrl) === true) {
+          const playlistId = splitUrl[0].substr(5)
+          let playlistItems = []
+          youtubeData.getPlaylist(playlistId)
+            .then((items) => {
+              for (let item of items) {
+                playlistItems.push(item.snippet.resourceId.videoId)
+              }
+              // dbに再生リスト登録
+              dispatch('searchPlaylistDB', {playlistId, playlistItems})
+              commit('Player/setPlaylist', playlistItems, {root: true})
+              commit('Player/cueVideo', playlistItems[0], {root: true})
+              commit('Controller/disablePlayButton', null, {root: true})
+            })
         }
         commit('initUrl')
+      }
+    },
+    async searchPlaylistDB ({commit, state}, {playlistId, playlistItems}) {
+      const dbData = await db.searchPlaylistId(playlistId)
+      if (dbData === null) {
+        await db.insertPlaylistId(playlistId, playlistItems)
+        youtubeData.getPlaylistTitle(playlistId, playlistItems[0])
+          .then(({src, title}) => {
+            commit('Playlist/addPlaylist', {playlistId, src, title, playlistItems}, {root: true})
+          })
       }
     },
     inputUrl ({commit, state}, {url}) {
@@ -225,6 +291,11 @@ const Header = {
   }
 }
 
+/******************
+*******************
+* Controller
+*******************
+*******************/
 const Controller = {
   namespaced: true,
   state: {
@@ -315,10 +386,12 @@ const Controller = {
       }
       // dbに再生日時を登録
       const date = getters.getDate(new Date())
-      api.updatePlaybackDate(rootState.Player.videoId, date)
+      db.updatePlaybackDate(rootState.Player.videoId, date)
       const index = rootGetters['History/getHistoryIndex'](rootState.Player.videoId)
-      // 再生する動画を履歴の一番上に
-      commit('History/updateHistory', index, {root: true})
+      // 既に履歴にある場合，再生する動画を履歴の一番上に
+      if (index !== -1) {
+        commit('History/updateHistory', index, {root: true})
+      }
       // requestAnimationFrame
       const loop = () => {
         // 現在の再生時間を取得
@@ -342,13 +415,13 @@ const Controller = {
       // chapterListに同じ時間のchapterが含まれていない場合，chapterを追加
       if (getters.getChapterIndex(currentTime) === -1) {
         commit('addChapter', {currentTime, currentTimeText})
-        api.updateChapterList(rootState.Player.videoId, state.chapterList)
+        db.updateChapterList(rootState.Player.videoId, state.chapterList)
       }
     },
     removeChapter ({commit, state, getters, rootState}, {value}) {
       const index = getters.getChapterIndex(value.time)
       commit('removeChapter', index)
-      api.updateChapterList(rootState.Player.videoId, state.chapterList)
+      db.updateChapterList(rootState.Player.videoId, state.chapterList)
     },
     moveSeekBar ({commit, state, rootState}, {value}) {
       if (rootState.Player.isEnd === true) {
@@ -369,6 +442,11 @@ const Controller = {
   }
 }
 
+/******************
+*******************
+* Menu
+*******************
+*******************/
 const Menu = {
   namespaced: true,
   state: {
@@ -381,7 +459,12 @@ const Menu = {
     }
   },
   actions: {
-    closeMenu ({commit, state}) {
+    closeMenu ({commit, state, rootState}) {
+      if (rootState.History.isHistoryDisplayed === true) {
+        commit('History/toggleHistoryDisplay', null, {root: true})
+      } else if (rootState.Playlist.isPlaylistDisplayed === true) {
+        commit('Playlist/togglePlaylistDisplay', null, {root: true})
+      }
       if (state.isMenuDisplayed === true) {
         commit('toggleMenu')
       }
@@ -389,11 +472,17 @@ const Menu = {
   }
 }
 
+/******************
+*******************
+* History
+*******************
+*******************/
 const History = {
   namespaced: true,
   state: {
     historyList: [],
-    isHistoryDisplayed: true
+    isHistoryDisplayed: false,
+    historyOpenButtonColor: ''
   },
   getters: {
     getHistoryIndex (state) {
@@ -408,12 +497,10 @@ const History = {
     }
   },
   mutations: {
-    initHistory (state, dbData) {
+    initHistory (state, {data, title}) {
       // dbDataを元にhisotryListを初期化
-      for (let i = 0; i < dbData.length; i++) {
-        let src = 'https://i.ytimg.com/vi/' + dbData[i].videoId + '/default.jpg'
-        state.historyList.push({videoId: dbData[i].videoId, thumbnail: src, playbackDate: dbData[i].playbackDate})
-      }
+      const src = 'https://i.ytimg.com/vi/' + data.videoId + '/default.jpg'
+      state.historyList.push({videoId: data.videoId, thumbnail: src, title: title, playbackDate: data.playbackDate})
       // playbackDateが大きい(最新)順にソート
       state.historyList.sort((a, b) => {
         if (a.playbackDate < b.playbackDate) {
@@ -424,9 +511,9 @@ const History = {
         }
       })
     },
-    addHistory (state, id) {
+    addHistory (state, {id, title}) {
       const src = 'https://i.ytimg.com/vi/' + id + '/default.jpg'
-      state.historyList.unshift({videoId: id, thumbnail: src, playbackDate: 0})
+      state.historyList.unshift({videoId: id, thumbnail: src, title: title, playbackDate: 0})
     },
     updateHistory (state, index) {
       const select = state.historyList.splice(index, 1)
@@ -435,6 +522,9 @@ const History = {
     toggleHistoryDisplay (state) {
       state.isHistoryDisplayed = !state.isHistoryDisplayed
     },
+    setHistoryOpenButtonColor (state, color) {
+      state.historyOpenButtonColor = color
+    },
     removeHistory (state, index) {
       state.historyList.splice(index, 1)
     }
@@ -442,20 +532,115 @@ const History = {
   actions: {
     async getHistoryFromDB ({commit, state}) {
       // dbのvideoIdをhistoryListに格納
-      const dbData = await api.getHistory()
-      commit('History/initHistory', dbData, {root: true})
+      const dbData = await db.getHistory()
+      for (let data of dbData) {
+        youtubeData.getVideoTitle(data.videoId)
+          .then((title) => {
+            commit('initHistory', {data, title})
+          })
+      }
     },
-    openHistory ({commit, state}) {
+    toggleHistory ({commit, state, rootState}) {
+      if (state.isHistoryDisplayed === false) {
+        // Playlistを開いている場合，Playlistを閉じる
+        if (rootState.Playlist.isPlaylistDisplayed === true) {
+          commit('Playlist/setPlaylistOpenButtonColor', '', {root: true})
+          commit('Playlist/togglePlaylistDisplay', null, {root: true})
+        }
+        commit('setHistoryOpenButtonColor', 'rgba(255, 255, 255, 0.2)')
+      } else {
+        commit('setHistoryOpenButtonColor', '')
+      }
       commit('toggleHistoryDisplay')
     },
-    selectHistory ({commit, state}, {videoId}) {
+    selectHistory ({commit, state, rootState}, {videoId}) {
+      if (rootState.Player.isPlaylist === true) {
+        commit('Player/endPlaylist', null, {root: true})
+      }
       commit('Player/cueVideo', videoId, {root: true})
       commit('Controller/disablePlayButton', null, {root: true})
     },
     removeHistory ({commit, getters}, {videoId}) {
-      api.remove(videoId)
+      db.removeChapterList(videoId)
       const index = getters.getHistoryIndex(videoId)
       commit('removeHistory', index)
+    }
+  }
+}
+
+/******************
+*******************
+* Playlist
+*******************
+*******************/
+const Playlist = {
+  namespaced: true,
+  state: {
+    playlistList: [],
+    isPlaylistDisplayed: false,
+    playlistOpenButtonColor: ''
+  },
+  getters: {
+    getPlaylistIndex (state) {
+      return (id) => {
+        for (let i = 0; i < state.playlistList.length; i++) {
+          if (state.playlistList[i].playlistId === id) {
+            return i
+          }
+        }
+        return -1
+      }
+    }
+  },
+  mutations: {
+    initPlaylistList (state, {data, src, title}) {
+      state.playlistList.push({playlistId: data.playlistId, thumbnail: src, title: title, items: data.items})
+    },
+    addPlaylist (state, {playlistId, src, title, playlistItems}) {
+      state.playlistList.unshift({playlistId: playlistId, thumbnail: src, title: title, items: playlistItems})
+    },
+    togglePlaylistDisplay (state) {
+      state.isPlaylistDisplayed = !state.isPlaylistDisplayed
+    },
+    setPlaylistOpenButtonColor (state, color) {
+      state.playlistOpenButtonColor = color
+    },
+    removePlaylist (state, index) {
+      state.playlistList.splice(index, 1)
+    }
+  },
+  actions: {
+    async getPlaylistFromDB ({commit, state}) {
+      const dbData = await db.getPlaylist()
+      for (let data of dbData) {
+        youtubeData.getPlaylistTitle(data.playlistId, data.items[0])
+          .then(({src, title}) => {
+            commit('initPlaylistList', {data, src, title})
+          })
+      }
+    },
+    togglePlaylist ({commit, state, rootState}) {
+      if (state.isPlaylistDisplayed === false) {
+        // Historyを開いている場合，Historyを閉じる
+        if (rootState.History.isHistoryDisplayed === true) {
+          commit('History/setHistoryOpenButtonColor', '', {root: true})
+          commit('History/toggleHistoryDisplay', null, {root: true})
+        }
+        commit('setPlaylistOpenButtonColor', 'rgba(255, 255, 255, 0.2)')
+      } else {
+        commit('setPlaylistOpenButtonColor', '')
+      }
+      commit('togglePlaylistDisplay')
+    },
+    selectPlaylist ({commit, state}, {playlistItems}) {
+      commit('Player/setPlaylist', playlistItems, {root: true})
+      commit('Player/cueVideo', playlistItems[0], {root: true})
+      commit('Controller/disablePlayButton', null, {root: true})
+    },
+    removePlaylist ({commit, getters}, {playlistId}) {
+      db.removePlaylist(playlistId)
+      const index = getters.getPlaylistIndex(playlistId)
+      commit('removePlaylist', index)
     }
   }
 }
@@ -470,7 +655,8 @@ export default new Vuex.Store({
     Header,
     Controller,
     Menu,
-    History
+    History,
+    Playlist
   },
   strict: process.env.NODE_ENV !== 'production'
 })

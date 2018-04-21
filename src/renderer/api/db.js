@@ -2,15 +2,21 @@ import Datastore from 'nedb'
 import path from 'path'
 import {remote} from 'electron'
 
-const db = new Datastore({
+const chapterListDB = new Datastore({
   filename: path.join(remote.app.getPath('userData'), 'chapterlist.json'),
   autoload: true
 })
 
+const playlistDB = new Datastore({
+  filename: path.join(remote.app.getPath('userData'), 'playlist.json'),
+  autoload: true
+})
+
 export default {
+  // chapterList
   searchVideoId (id) {
     return new Promise((resolve) => {
-      db.findOne({'videoId': id}, (err, docs) => {
+      chapterListDB.findOne({'videoId': id}, (err, docs) => {
         if (err) {
           console.log(err)
         }
@@ -20,19 +26,19 @@ export default {
   },
   insertVideoId (id) {
     return new Promise((resolve) => {
-      db.insert({videoId: id, chapterList: [], playbackDate: ''})
+      chapterListDB.insert({videoId: id, chapterList: [], playbackDate: ''})
       resolve()
     })
   },
   updatePlaybackDate (id, date) {
-    db.update({'videoId': id}, {$set: {playbackDate: date}})
+    chapterListDB.update({'videoId': id}, {$set: {playbackDate: date}})
   },
   updateChapterList (id, chapterList) {
-    db.update({'videoId': id}, {$set: {chapterList: chapterList}})
+    chapterListDB.update({'videoId': id}, {$set: {chapterList: chapterList}})
   },
   getHistory () {
     return new Promise((resolve) => {
-      db.find({}, (err, docs) => {
+      chapterListDB.find({}, (err, docs) => {
         if (err) {
           console.log(err)
         }
@@ -40,7 +46,37 @@ export default {
       })
     })
   },
-  remove (id) {
-    db.remove({'videoId': id}, {})
+  removeChapterList (id) {
+    chapterListDB.remove({'videoId': id}, {})
+  },
+  // playlist
+  searchPlaylistId (id) {
+    return new Promise((resolve) => {
+      playlistDB.findOne({'playlistId': id}, (err, docs) => {
+        if (err) {
+          console.log(err)
+        }
+        resolve(docs)
+      })
+    })
+  },
+  insertPlaylistId (id, items) {
+    return new Promise((resolve) => {
+      playlistDB.insert({playlistId: id, items: items})
+      resolve()
+    })
+  },
+  getPlaylist () {
+    return new Promise((resolve) => {
+      playlistDB.find({}, (err, docs) => {
+        if (err) {
+          console.log(err)
+        }
+        resolve(docs)
+      })
+    })
+  },
+  removePlaylist (playlistId) {
+    playlistDB.remove({'playlistId': playlistId}, {})
   }
 }
