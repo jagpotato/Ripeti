@@ -14,27 +14,37 @@
 
 #### 動画の選択
 
-検索欄にYouTube動画ページのURLを入力して検索ボタンを押すことで動画を再生する．一度このプレイヤーで見た動画は視聴履歴からも再生できる．  
+検索欄にYouTube動画ページのURLを入力して検索ボタンを押すことで動画を再生する．  
 
-![ss1](https://user-images.githubusercontent.com/15711514/37832404-d9c38772-2eeb-11e8-9f4d-593088d5c262.png)  
+![ss1](https://user-images.githubusercontent.com/15711514/39084823-8f27faf0-45b5-11e8-8ab5-2719f2814c28.png)  
 
-![ss4](https://user-images.githubusercontent.com/15711514/38078947-c1a0a3aa-3378-11e8-8ab4-5c0e16426d6a.png)  
+一度このプレイヤーで見た動画はメニューのHistoryからも再生できる．  
+
+![ss4](https://user-images.githubusercontent.com/15711514/39084839-e4c8a964-45b5-11e8-8aaf-b537a40e7edf.png)  
+
+検索欄に再生リストページのURLを入力して検索ボタンを押すことで再生リストを再生する．  
+メニューのPlaylistからも再生できる．  
+
+![ss5](https://user-images.githubusercontent.com/15711514/39084844-eef6b7dc-45b5-11e8-86a6-8e9d828df951.PNG)  
 
 #### 動画の制御
 
 動画の再生と一時停止，音量の調整，シークバーの移動ができる．  
 
-![ss2](https://user-images.githubusercontent.com/15711514/38080773-4ad9d264-337d-11e8-97ea-04c16bd64308.png)  
+![ss2](https://user-images.githubusercontent.com/15711514/39084829-9b102af4-45b5-11e8-8634-8bf1aa7cdbb9.png)  
 
 #### チャプターの設定
 
-右下にある+マークのボタンで現在の再生時間をチャプターに設定できる．右隣にある三角マークのボタンを押すとチャプターリストが開く．再生時間を選択することでその時間に移動する．  
+右下にある+マークのボタンで現在の再生時間をチャプターに設定できる．  
+右隣にある三角マークのボタンを押すとチャプターリストが開く．  
+再生時間を選択することでその時間に移動する．  
 
-![ss3](https://user-images.githubusercontent.com/15711514/38080800-5fdccef0-337d-11e8-8741-176d2f531862.png)  
+![ss3](https://user-images.githubusercontent.com/15711514/39084851-f9fa37f8-45b5-11e8-990e-c32c06c191a3.png)  
 
 #### 参考動画
 
-[【KINGDOM HEARTS III】 D23 Expo Japan 2018 Trailer - YouTube](https://www.youtube.com/watch?time_continue=4&v=LgOHSWyG-PM)  
+- [【KINGDOM HEARTS III】 D23 Expo Japan 2018 Trailer - YouTube](https://www.youtube.com/watch?v=LgOHSWyG-PM)  
+- [キングダム ハーツ - YouTube - YouTube](https://www.youtube.com/playlist?list=PLsHA74V3bmZ5Pss9UF5hpUcaOaT9HtUdh)  
 
 ## Build Setup
 
