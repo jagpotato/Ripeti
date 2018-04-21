@@ -243,10 +243,10 @@ const Header = {
   actions: {
     searchVideo ({commit, state, rootState, dispatch}) {
       if (state.url !== '') {
-        const splitUrl = state.url.match(/v=[0-9a-zA-Z-_]+|list=[0-9a-zA-Z-_]+/)
+        let splitUrl = state.url.match(/v=[0-9a-zA-Z-_]+&list=[0-9a-zA-Z-_]+|v=[0-9a-zA-Z-_]+|list=[0-9a-zA-Z-_]+/)
         // /\/[0-9a-zA-Z-_]{11}/ 動画を右クリック，「動画のURLをコピー」用
         // 動画の読み込み
-        if (/^v=/.test(splitUrl) === true) {
+        if (/^v=[0-9a-zA-Z-_]+$/.test(splitUrl) === true) {
           if (rootState.Player.isPlaylist === true) {
             commit('Player/endPlaylist', null, {root: true})
           }
@@ -254,7 +254,10 @@ const Header = {
           commit('Player/cueVideo', id, {root: true})
           commit('Controller/disablePlayButton', null, {root: true})
         // プレイリストの読み込み
-        } else if (/^list=/.test(splitUrl) === true) {
+        } else if (/^list=|v=[0-9a-zA-Z-_]+&list=[0-9a-zA-Z-_]+/.test(splitUrl) === true) {
+          if (/^v=/.test(splitUrl) === true) {
+            splitUrl = state.url.match(/list=[0-9a-zA-Z-_]+/)
+          }
           const playlistId = splitUrl[0].substr(5)
           let playlistItems = []
           youtubeData.getPlaylist(playlistId)
@@ -461,8 +464,10 @@ const Menu = {
   actions: {
     closeMenu ({commit, state, rootState}) {
       if (rootState.History.isHistoryDisplayed === true) {
+        commit('History/setHistoryOpenButtonColor', '', {root: true})
         commit('History/toggleHistoryDisplay', null, {root: true})
       } else if (rootState.Playlist.isPlaylistDisplayed === true) {
+        commit('Playlist/setPlaylistOpenButtonColor', '', {root: true})
         commit('Playlist/togglePlaylistDisplay', null, {root: true})
       }
       if (state.isMenuDisplayed === true) {
