@@ -1,18 +1,15 @@
 <template>
-  <div id="history">
-    <button id="history-open-button" @click="openHistory">
-      <i class="mdi mdi-history mdi-light mdi-18px"></i>
-      <span>History</span>
-    </button>
-    <transition name="history-list">
-      <ul v-show="isHistoryDisplayed">
-        <li v-for="history in historyList" :key="history.videoId">
-          <button id="history-button" @click="selectHistory(history)"><img :src="history.thumbnail"></button>
-          <button id="history-remove-button" @click="removeHistory(history)"><i class="mdi mdi-close mdi-light mdi-24px"></i></button>
+  <transition name="menu-content">
+    <div id="history" v-show="isHistoryDisplayed">
+      <ul id="history-list">
+        <li class="list-item" v-for="history in historyList" :key="history.videoId">
+          <div class="list-img-area"><img class="list-img" :src="history.thumbnail" @click="selectHistory(history)"></div>
+          <div class="list-title" @click="selectHistory(history)">{{history.title}}</div>
+          <div class="list-remove-button" @click="removeHistory(history)"></div>
         </li>
       </ul>
-    </transition>
-  </div>
+    </div>
+  </transition>
 </template>
 
 <script>
@@ -45,47 +42,24 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 #history {
-  /* background-color: rgba(255, 0, 255, 0.1); */
+  position: absolute;
+  top: 0;
+  left: 150px;
+  z-index: 2;
+  width: 300px;
+  height: 100vh;
+  background-color: rgba(42, 42, 42, 1.0);
+  overflow: auto;
+  -webkit-app-region: no-drag;
+}
+#history-list {
   width: 100%;
-  height: 100%;
-}
-#history-open-button {
-  width: 100%;
-  height: 40px;
-  padding-left: 20px;
-  text-align: left;
-  font-size: 18px;
-  color: rgba(255, 255, 255, 1.0);
-}
-#history-open-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-span {
-  margin-left: 10px;
-}
-ul {
-  width: 100%;
-  height: 80%;
   list-style: none;
   padding: 0;
-  overflow: auto;
-}
-li {
-  text-align: center;
+  margin: 0;
   display: flex;
-  justify-content: center;
-}
-#history-button {
-  width: 100px;
-  padding: 0;
-}
-img {
-  width: 100px;
-}
-#history-remove-button {
-  width: 30px;
-  height: 30px;
-  margin-bottom: auto;
+  flex-direction: column;
+  align-items: center;
 }
 ::-webkit-scrollbar {
   width: 5px;
@@ -94,17 +68,44 @@ img {
   background-color: rgba(70, 70, 70, 1.0);
   border-radius: 10px;
 }
-button {
+.list-item {
+  width: 100%;
+  height: 100px;
+  display: flex;
+}
+.list-img-area {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.list-img {
   cursor: pointer;
-  background-color: transparent;
-  border: none;
-  outline: none;
 }
-.history-list-enter-active, .history-list-leave-active {
-  transition: all 0.1s;
+.list-title {
+  flex: 1;
+  color: rgba(227, 227, 227, 1.0);
+  font-size: 15px;
+  padding-top: 5px;
+  cursor: pointer;
+  overflow: hidden;
 }
-.history-list-enter, .history-list-leave-to {
-  transform: translateY(-10px);
+.list-remove-button {
+  width: 30px;
+  height: 30px;
+  align-self: flex-start;
+  background-image: url('../assets/img/remove.svg');
+  background-size: 100% 100%;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.list-remove-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+.menu-content-enter-active, .menu-content-leave-active {
+  transition: all 0.3s;
+}
+.menu-content-enter, .menu-content-leave-to {
   opacity: 0;
 }
 </style>

@@ -46,7 +46,7 @@ export default {
       })
     })
   },
-  remove (id) {
+  removeChapterList (id) {
     chapterListDB.remove({'videoId': id}, {})
   },
   // playlist
@@ -65,5 +65,18 @@ export default {
       playlistDB.insert({playlistId: id, items: items})
       resolve()
     })
+  },
+  getPlaylist () {
+    return new Promise((resolve) => {
+      playlistDB.find({}, (err, docs) => {
+        if (err) {
+          console.log(err)
+        }
+        resolve(docs)
+      })
+    })
+  },
+  removePlaylist (playlistId) {
+    playlistDB.remove({'playlistId': playlistId}, {})
   }
 }
